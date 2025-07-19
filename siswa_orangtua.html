@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - SMA Mutiara 17 Agustus</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-content">
+      <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
+      <h1>SMA Mutiara 17 Agustus</h1>
+    </div>
+    <div class="header-nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="siswa_orangtua.html" class="nav-link">Siswa / Orang Tua</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>Dashboard Siswa</h2>
+    <div class="search-container">
+      <input type="text" id="nisnInput" placeholder="Masukkan NISN" />
+      <button onclick="fetchStudentData()">Cari NISN</button>
+    </div>
+
+    <div id="studentInfo" class="student-info"></div>
+
+    <!-- Recommendation section -->
+    <div class="recommendation-container" id="recommendationContainer" style="display: none;">
+      <h3>Pilih 3 Jurusan Minat (Ranking 1 to 3)</h3>
+
+      <div id="majorInterestContainer">
+        <!-- Select Major Interest #1 -->
+        <label for="majorInterest1">1. Select Major Interest #1</label>
+        <select id="majorInterest1">
+          <option value="Teknik">Teknik</option>
+          <option value="Sains(MIPA)">Sains(MIPA)</option>
+          <option value="Kedokteran/Farmasi">Kedokteran/Farmasi</option>
+          <option value="Ekonomi/Manajemen">Ekonomi/Manajemen</option>
+          <option value="Psikologi">Psikologi</option>
+          <option value="Sospol/Hukum/Komunikasi(FISIP)">Sospol/Hukum/Komunikasi(FISIP)</option>
+          <option value="Sastra/Seni/Budaya">Sastra/Seni/Budaya</option>
+          <option value="Adm/Sekretaris">Adm/Sekretaris</option>
+        </select><br>
+
+        <!-- Select Major Interest #2 -->
+        <label for="majorInterest2">2. Select Major Interest #2</label>
+        <select id="majorInterest2">
+          <option value="Teknik">Teknik</option>
+          <option value="Sains(MIPA)">Sains(MIPA)</option>
+          <option value="Kedokteran/Farmasi">Kedokteran/Farmasi</option>
+          <option value="Ekonomi/Manajemen">Ekonomi/Manajemen</option>
+          <option value="Psikologi">Psikologi</option>
+          <option value="Sospol/Hukum/Komunikasi(FISIP)">Sospol/Hukum/Komunikasi(FISIP)</option>
+          <option value="Sastra/Seni/Budaya">Sastra/Seni/Budaya</option>
+          <option value="Adm/Sekretaris">Adm/Sekretaris</option>
+        </select><br>
+
+        <!-- Select Major Interest #3 -->
+        <label for="majorInterest3">3. Select Major Interest #3</label>
+        <select id="majorInterest3">
+          <option value="Teknik">Teknik</option>
+          <option value="Sains(MIPA)">Sains(MIPA)</option>
+          <option value="Kedokteran/Farmasi">Kedokteran/Farmasi</option>
+          <option value="Ekonomi/Manajemen">Ekonomi/Manajemen</option>
+          <option value="Psikologi">Psikologi</option>
+          <option value="Sospol/Hukum/Komunikasi(FISIP)">Sospol/Hukum/Komunikasi(FISIP)</option>
+          <option value="Sastra/Seni/Budaya">Sastra/Seni/Budaya</option>
+          <option value="Adm/Sekretaris">Adm/Sekretaris</option>
+        </select><br>
+      </div>
+      
+      <button onclick="generateRecommendations()">Cari Rekomendasi</button>
+
+      <div id="recommendationMethods" style="display: none;">
+        <h3>Rekomendasi Berdasarkan Metode</h3>
+        <div id="methodResults"></div>
+        <h3>Rekomendasi Akhir</h3>
+        <div id="finalRecommendation"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup for showing Nilai Akademik and Psikotes -->
+  <div id="nilaiPopup" class="popup">
+    <div class="popup-content">
+      <span class="close" onclick="closePopup()">&times;</span>
+      <h3>Nilai Akademik dan Psikotes</h3>
+      <div id="nilaiDetails"></div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Profil ideal jurusan & kelompok mapel
+    const profilAkademik = {
+      'Teknik':   { bahasa: 60, logika: 80, sains: 80, praktek: 80, sosial: 60 },
+      'Sains(MIPA)':   { bahasa: 70, logika: 80, sains: 80, praktek: 70, sosial: 60 },
+      'Kedokteran/Farmasi':   { bahasa: 70, logika: 80, sains: 80, praktek: 80, sosial: 70 },
+      'Ekonomi/Manajemen':   { bahasa: 70, logika: 80, sains: 60, praktek: 70, sosial: 80 },
+      'Psikologi':   { bahasa: 80, logika: 80, sains: 60, praktek: 70, sosial: 80 },
+      'FISIP':   { bahasa: 80, logika: 70, sains: 60, praktek: 60, sosial: 80 },
+      'Sastra/Seni/Budaya':   { bahasa: 80, logika: 60, sains: 60, praktek: 70, sosial: 80 },
+      'Adm/Sekretaris':   { bahasa: 75, logika: 75, sains: 70, praktek: 60, sosial: 75 }
+    };
+    const profilPsikotes = {
+      'Teknik':   { IQ: 120, SR: 140, MR: 140, AR: 110, VR: 90, NA: 140, LU: 80 },
+      'Sains(MIPA)':   { IQ: 90, SR: 120, MR: 90, AR: 120, VR: 110, NA: 140, LU: 80 },
+      'Kedokteran/Farmasi':   { IQ: 120, SR: 140, MR: 140, AR: 90, VR: 120, NA: 90, LU: 80 },
+      'Ekonomi/Manajemen':   { IQ: 120, SR: 70, MR: 70, AR: 140, VR: 140, NA: 120, LU: 90 },
+      'Psikologi':   { IQ: 140, SR: 90, MR: 90, AR: 140, VR: 140, NA: 120, LU: 120 },
+      'FISIP':   { IQ: 140, SR: 70, MR: 70, AR: 120, VR: 140, NA: 90, LU: 140 },
+      'Sastra/Seni/Budaya':   { IQ: 90, SR: 70, MR: 70, AR: 120, VR: 90, NA: 70, LU: 140 },
+      'Adm/Sekretaris':   { IQ: 90, SR: 70, MR: 70, AR: 80, VR: 140, NA: 120, LU: 90 }
+    };
+    const kelompok = {
+      bahasa:      ['bahasaIndo', 'bahasaInggris'],
+      logika:      ['matematika', 'fisika', 'Informatika'],
+      sains:       ['kimia', 'biologi'],
+      praktek:     ['olahraga'],
+      sosial:      ['sejarah', 'geografi', 'ekonomi', 'PKN']
+    };
+
+    // --- MAPPING FIELD PSIKOTES FIREBASE KE PROFIL (PENTING!!) ---
+    function mappingPsikotesFirebaseToProfil(nilaiPsikotes) {
+      return {
+        IQ: Number(nilaiPsikotes.kecerdasanUmum) || 0,
+        SR: Number(nilaiPsikotes.spatialReasoning) || 0,
+        MR: Number(nilaiPsikotes.mechanicalReasoning) || 0,
+        AR: Number(nilaiPsikotes.penalaranAbstrak) || 0,
+        VR: Number(nilaiPsikotes.pemahamanVerbal) || 0,
+        NA: Number(nilaiPsikotes.numerikal) || 0,
+        LU: Number(nilaiPsikotes.logika) || 0
+      }
+    }
+
+    // 2. Fungsi utilitas GAP
+    function gapScore(gap) {
+      if (gap === 0) return 6;
+      if (gap === -1) return 5;
+      if (gap === -2) return 4;
+      if (gap === -3) return 3;
+      if (gap === -4) return 2;
+      if (gap === -5) return 1;
+      if (gap === 1) return 5.5;
+      if (gap === 2) return 4.5;
+      if (gap === 3) return 3.5;
+      if (gap === 4) return 2.5;
+      if (gap === 5) return 1.5;
+      return gap < -5 ? 1 : 6;
+    }
+    function meanGapScore(nilai, profil) {
+      let total = 0, count = 0;
+      for (let k in profil) {
+        let skor = 0;
+        if (nilai[k] !== undefined) {
+          let gap = Math.round(nilai[k] - profil[k]);
+          skor = gapScore(gap);
+        }
+        total += skor;
+        count++;
+      }
+      return count ? (total / count) : 0;
+    }
+    function hitungRataRataKelompok(nilaiSiswa, kelompok) {
+      let hasil = {};
+      for (let group in kelompok) {
+        // Ubah ke Number sebelum operasi matematika
+        let arr = kelompok[group].map(mapel => Number(nilaiSiswa[mapel]) || 0);
+        let valid = arr.filter(v => v > 0);
+        hasil[group] = valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length) : 0;
+      }
+      return hasil;
+    }
+
+    // 3. Fetch data siswa (Firebase v8 style)
+    function fetchStudentData() {
+      const nisn = document.getElementById('nisnInput').value.trim();
+      if (!nisn) {
+        alert('Masukkan NISN terlebih dahulu!');
+        return;
+      }
+      const studentRef = firebase.database().ref('students/' + nisn);
+      studentRef.once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (data) {
+          // Kelompokkan nilai akademik
+          const akademikKelompok = hitungRataRataKelompok(data.subjects, kelompok);
+          // Simpan global
+          window._academicData = akademikKelompok;
+          window._psikotesDataRaw = data.psikotes || {};
+          window._psikotesData = mappingPsikotesFirebaseToProfil(window._psikotesDataRaw);
+          window._nisnAktif = nisn;
+          window._studentName = data.name || '';
+          // Tampilkan info siswa
+          document.getElementById('studentInfo').innerHTML = `
+            <p><strong>Nama Siswa:</strong> ${data.name}</p>
+            <p><strong>NISN:</strong> ${nisn}</p>
+            <button onclick="openPopup()">Lihat Nilai</button>
+          `;
+          document.getElementById('recommendationContainer').style.display = 'block';
+        } else {
+          document.getElementById('studentInfo').innerHTML = '';
+          document.getElementById('recommendationContainer').style.display = 'none';
+          alert('Data siswa tidak ditemukan.');
+        }
+      });
+    }
+
+    // 4. Popup nilai
+    function openPopup() {
+      let details = "<b>Nilai Akademik:</b><ul>";
+      for (const [k, v] of Object.entries(window._academicData || {})) {
+        details += `<li>${k}: ${v.toFixed(2)}</li>`;
+      }
+      details += "</ul><b>Nilai Psikotes:</b><ul>";
+      for (const [k, v] of Object.entries(window._psikotesDataRaw || {})) {
+        details += `<li>${k}: ${v}</li>`;
+      }
+      details += "</ul>";
+      document.getElementById('nilaiDetails').innerHTML = details;
+      document.getElementById('nilaiPopup').style.display = 'block';
+    }
+    function closePopup() {
+      document.getElementById('nilaiPopup').style.display = 'none';
+    }
+
+    // 5. Generate rekomendasi
+    function generateRecommendations() {
+      const major1 = document.getElementById('majorInterest1').value;
+      const major2 = document.getElementById('majorInterest2').value;
+      const major3 = document.getElementById('majorInterest3').value;
+      const nisn = window._nisnAktif;
+      if (!nisn || !window._academicData) {
+        alert('Cari NISN siswa terlebih dahulu!');
+        return;
+      }
+      const nilaiAkademikKelompok = window._academicData;
+      const nilaiPsikotes = window._psikotesData || {};
+      const minat = {};
+      minat[major1] = 1; minat[major2] = 0.75; minat[major3] = 0.5;
+
+      let hasil = [];
+      Object.keys(profilAkademik).forEach(jurusan => {
+        const akademikScore = meanGapScore(nilaiAkademikKelompok, profilAkademik[jurusan]);
+        const psikotesScore = meanGapScore(nilaiPsikotes, profilPsikotes[jurusan]);
+        const minatScore = (minat[jurusan] || 0);
+        // Bobot: Akademik 40%, Psikotes 35%, Minat 25% (minat dikali 6 agar range seragam)
+        const skorTotal = akademikScore * 0.4 + psikotesScore * 0.35 + minatScore * 6 * 0.25;
+        hasil.push({ jurusan, akademikScore, psikotesScore, minatScore, skorTotal });
+      });
+      hasil.sort((a, b) => b.skorTotal - a.skorTotal);
+
+      // Tampilkan hasil
+      let html = "";
+      hasil.forEach((h, i) => {
+        html += `<li><b>${h.jurusan}</b> | Skor: ${h.skorTotal.toFixed(2)} | Akademik: ${h.akademikScore.toFixed(2)} | Psikotes: ${h.psikotesScore.toFixed(2)} | Minat: ${h.minatScore}</li>`;
+      });
+      document.getElementById('recommendationMethods').style.display = 'block';
+      document.getElementById('methodResults').innerHTML = "<ol>"+html+"</ol>";
+      document.getElementById('finalRecommendation').innerHTML = `<b>${hasil[0].jurusan}</b> (Skor: ${hasil[0].skorTotal.toFixed(2)})<br><span style='color:green'>Jurusan ini direkomendasikan!</span>`;
+
+      // Simpan ke Firebase
+      firebase.database().ref('hasil_rekomendasi/' + nisn).set({
+        nisn,
+        nama: window._studentName,
+        major_choices: [major1, major2, major3],
+        ranking: hasil,
+        recommended: hasil[0].jurusan,
+        time: new Date().toISOString()
+      }, function(error) {
+        if (!error) {
+          document.getElementById('finalRecommendation').innerHTML += "<br><span style='color:blue'>Hasil rekomendasi berhasil disimpan!</span>";
+        } else {
+          document.getElementById('finalRecommendation').innerHTML += "<br><span style='color:red'>Gagal menyimpan hasil rekomendasi!</span>";
+        }
+      });
+    }
+
+    // Biar bisa dipanggil via button onclick
+    window.fetchStudentData = fetchStudentData;
+    window.openPopup = openPopup;
+    window.closePopup = closePopup;
+    window.generateRecommendations = generateRecommendations;
+</script>
+</body>
+</html>

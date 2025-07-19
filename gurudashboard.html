@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guru Dashboard - SMA Mutiara 17 Agustus</title>
+  <!-- Include Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- Firebase custom JS script -->
+  <script src="firebase.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <header>
+      <div class="header-content">
+        <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
+        <h1>SMA Mutiara 17 Agustus</h1>
+      </div>
+
+      <div class="header-nav">
+        <a href="gurudashboard.html" class="nav-link">
+          <img src="https://img.icons8.com/?size=100&id=fSVp4a58MbGQ&format=png&color=000000" alt="Dashboard Icon" class="nav-icon"> Dashboard
+        </a>
+        <a href="input_nilai.html" class="nav-link">
+          <img src="https://img.icons8.com/?size=100&id=BluVsWSaUlQ2&format=png&color=000000" alt="Input Nilai Icon" class="nav-icon"> Input Nilai
+        </a>
+        <div class="nav-link account">
+          <img src="https://img.icons8.com/?size=100&id=151IAtg8gTZE&format=png&color=000000" alt="Account Icon" class="nav-icon">
+          <span id="loggedInUser">guru1</span> <!-- Display Username Here -->
+        </div>
+        <a href="logout.html" class="nav-link logout">
+          <img src="https://img.icons8.com/?size=100&id=13925&format=png&color=000000" alt="Logout Icon" class="nav-icon"> Logout
+        </a>
+      </div>    
+    </header>
+
+    <!-- Guru Dashboard Content -->
+    <section class="dashboard">
+      <h2>Input Data Siswa</h2>
+
+  <!-- Layout for Nama Siswa and NISN, side by side -->
+  <div class="form-row">
+    <div class="input-group">
+      <label for="studentName">Nama Siswa:</label>
+      <input type="text" id="studentName" placeholder="Masukkan Nama Siswa" required class="input-field">
+    </div>
+    
+    <div class="input-group">
+      <label for="nisn">NISN:</label>
+      <input type="text" id="nisn" placeholder="Masukkan NISN" required class="input-field">
+    </div>
+</div>
+  <!-- Nilai Akademik and Nilai Psikotes Inputs Side by Side -->
+  <div class="input-container">
+    <!-- Nilai Akademik (on the left) -->
+    <div class="input-group">
+      <h3>Nilai Akademik</h3>
+      <label for="bahasaIndo">Bahasa Indonesia:</label>
+      <input type="number" id="bahasaIndo" placeholder="Nilai Bahasa Indonesia" required class="input-field">
+
+      <label for="bahasaInggris">Bahasa Inggris:</label>
+      <input type="number" id="bahasaInggris" placeholder="Nilai Bahasa Inggris" required class="input-field">
+
+      <label for="matematika">Matematika:</label>
+      <input type="number" id="matematika" placeholder="Nilai Matematika" required class="input-field">
+
+      <label for="fisika">Fisika:</label>
+      <input type="number" id="fisika" placeholder="Nilai Fisika" required class="input-field">
+
+      <label for="biologi">Biologi:</label>
+      <input type="number" id="biologi" placeholder="Nilai Biologi" required class="input-field">
+
+      <label for="kimia">Kimia:</label>
+      <input type="number" id="kimia" placeholder="Nilai Kimia" required class="input-field">
+
+      <label for="olahraga">Olahraga:</label>
+      <input type="number" id="olahraga" placeholder="Nilai Olahraga" required class="input-field">
+      
+      <label for="olahraga">Informatika:</label>
+      <input type="number" id="Informatika" placeholder="Nilai Informatika" required class="input-field">
+
+      <label for="PKN">PKN:</label>
+      <input type="number" id="PKN" placeholder="Nilai PKN" required class="input-field">
+
+      <label for="geografi">Geografi:</label>
+      <input type="number" id="geografi" placeholder="Nilai Geografi" required class="input-field">
+
+      <label for="sejarah">Sejarah:</label>
+      <input type="number" id="sejarah" placeholder="Nilai Sejarah" required class="input-field">
+    </div>
+
+    <!-- Nilai Psikotes (on the right) -->
+    <div class="input-group">
+      <h3>Nilai Psikotes</h3>
+      <label for="kecerdasanUmum">Kecerdasan Umum (I):</label>
+      <input type="number" id="kecerdasanUmum" placeholder="Nilai Kecerdasan Umum" required class="input-field">
+
+      <label for="spatialReasoning">Spatial Reasoning (SR):</label>
+      <input type="number" id="spatialReasoning" placeholder="Nilai Spatial Reasoning" required class="input-field">
+
+      <label for="mechanicalReasoning">Mechanical Reasoning (MR):</label>
+      <input type="number" id="mechanicalReasoning" placeholder="Nilai Mechanical Reasoning" required class="input-field">
+
+      <label for="penalaranAbstrak">Penalaran Abstrak (AR):</label>
+      <input type="number" id="penalaranAbstrak" placeholder="Nilai Penalaran Abstrak" required class="input-field">
+
+      <label for="pemahamanVerbal">Pemahaman Verbal (VR):</label>
+      <input type="number" id="pemahamanVerbal" placeholder="Nilai Pemahaman Verbal" required class="input-field">
+
+      <label for="numerikal">Numerikal (NA):</label>
+      <input type="number" id="numerikal" placeholder="Nilai Numerikal" required class="input-field">
+
+      <label for="logika">Logika (L):</label>
+      <input type="number" id="logika" placeholder="Nilai Logika" required class="input-field">
+    </div>
+  </div>
+  <!-- Note Section -->
+  <div class="container-h4">
+    <h4>Note:</h4>
+    <p>Nilai hanya bisa bilangan bulat.</p>
+  </div>
+
+      <!-- Save Button -->
+      <button onclick="saveData()">Simpan Data</button>
+    </section>
+  </div>
+    <!-- Footer Section -->
+  <footer>
+    <div class="footer-content">
+      <div>
+        <h3>SMA Mutiara 17 Agustus</h3>
+        <p>Sistem Rekomendasi Jurusan untuk membantu siswa memilih jalur pendidikan yang tepat.</p>
+      </div>
+      <div class="contact">
+        <h3>Kontak</h3>
+        <p>Email: info@smamutiara17.sch.id</p>
+        <p>Telepon: (021) 1234-5678</p>
+      </div>
+      <div class="alamat">
+        <h3>Alamat</h3>
+        <p>Jl. Kemerdekaan No. 17, Jakarta Pusat</p>
+      </div>
+    </div>
+    <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
+  </footer>
+
+<script>
+    const username = localStorage.getItem('username');
+  if (!username) {
+    window.location.href = "index.html";  // Redirect to login if not logged in
+  } else {
+    document.getElementById("loggedInUser").innerText = username; // Show the logged-in user's name
+  }
+  function saveData() {
+  console.log('Button clicked!');
+  
+  // Null check for nisn and studentName
+  const nisnElement = document.getElementById('nisn');
+  const studentNameElement = document.getElementById('studentName');
+  
+  if (!nisnElement || !studentNameElement) {
+    alert('Please fill in all required fields!');
+    return;  // Stop execution if the elements are not found
+  }
+
+  const nisn = nisnElement.value;
+  const studentName = studentNameElement.value;
+
+  let studentData = {
+    name: studentName,
+    nisn: nisn,
+    subjects: {},  // For Nilai Akademik
+    psikotes: {}   // For Nilai Psikotes
+  };
+
+  // Collect Nilai Akademik Data
+  studentData.subjects = {
+    bahasaIndo: document.getElementById('bahasaIndo').value || 0,
+    bahasaInggris: document.getElementById('bahasaInggris').value || 0,
+    matematika: document.getElementById('matematika').value || 0,
+    fisika: document.getElementById('fisika').value || 0,
+    Informatika: document.getElementById('Informatika').value || 0,
+    biologi: document.getElementById('biologi').value || 0,
+    kimia: document.getElementById('kimia').value || 0,
+    olahraga: document.getElementById('PKN').value || 0,
+    PKN: document.getElementById('olahraga').value || 0,
+    geografi: document.getElementById('geografi').value || 0,
+    sejarah: document.getElementById('sejarah').value || 0
+  };
+
+  // Collect Nilai Psikotes Data
+  studentData.psikotes = {
+    kecerdasanUmum: document.getElementById('kecerdasanUmum').value,
+    spatialReasoning: document.getElementById('spatialReasoning').value,
+    mechanicalReasoning: document.getElementById('mechanicalReasoning').value,
+    penalaranAbstrak: document.getElementById('penalaranAbstrak').value,
+    pemahamanVerbal: document.getElementById('pemahamanVerbal').value,
+    numerikal: document.getElementById('numerikal').value,
+    logika: document.getElementById('logika').value
+  };
+
+  // Save data to Firebase under the student's NISN
+  firebase.database().ref('students/' + nisn).set(studentData)
+    .then(() => {
+      alert('Data berhasil disimpan!');
+    })
+    .catch(error => {
+      console.error('Error saving data:', error);
+      alert('Gagal menyimpan data, coba lagi.');
+    });
+}
+</script>
+</body>
+</html>

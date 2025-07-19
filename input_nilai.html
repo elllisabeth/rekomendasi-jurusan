@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Input Nilai - Guru Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script> <!-- For exporting Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for graphs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+  <!-- Include XLSX Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <!-- Engaging Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <header>
+        <div class="header-content">
+          <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
+          <h1>SMA Mutiara 17 Agustus</h1>
+        </div>
+
+        <div class="header-nav">
+          <a href="gurudashboard.html" class="nav-link">
+            <img src="https://img.icons8.com/?size=100&id=fSVp4a58MbGQ&format=png&color=000000" alt="Dashboard Icon" class="nav-icon"> Dashboard
+          </a>
+          <a href="input_nilai.html" class="nav-link">
+            <img src="https://img.icons8.com/?size=100&id=BluVsWSaUlQ2&format=png&color=000000" alt="Input Nilai Icon" class="nav-icon"> Input Nilai
+          </a>
+          <div class="nav-link account">
+            <img src="https://img.icons8.com/?size=100&id=151IAtg8gTZE&format=png&color=000000" alt="Account Icon" class="nav-icon">
+            <span id="loggedInUser">guru1</span> 
+          </div>
+          <a href="logout.html" class="nav-link logout">
+            <img src="https://img.icons8.com/?size=100&id=13925&format=png&color=000000" alt="Logout Icon" class="nav-icon"> Logout
+          </a>
+        </div>    
+    </header>
+
+  <!-- Main content area -->
+  
+      <!-- Table Section -->
+    <div class="table-container">
+      <h3>Daftar Nilai Akademik</h3>
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>NISN</th>
+            <th>Nama Siswa</th>
+            <th>Bahasa Indonesia</th>
+            <th>Bahasa Inggris</th>
+            <th>Matematika</th>
+            <th>Fisika</th>
+            <th>Biologi</th>
+            <th>Kimia</th>
+            <th>Olahraga</th>
+            <th>PKN</th>
+            <th>Geografi</th>
+            <th>Sejarah</th>
+            <th>Result</th> <!-- Add Result Column -->
+          </tr>
+        </thead>
+        <tbody id="dataTableBody">
+          <!-- Data rows will be inserted dynamically here -->
+        </tbody>
+      </table>
+
+      <!-- New Table for Nilai Psikotes -->
+      <h3>Daftar Nilai Psikotes</h3>
+      <table id="psikotesTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>NISN</th>
+            <th>Nama Siswa</th>
+            <th>Kecerdasan Umum (I)</th>
+            <th>Spatial Reasoning (SR)</th>
+            <th>Mechanical Reasoning (MR)</th>
+            <th>Penalaran Abstrak (AR)</th>
+            <th>Pemahaman Verbal (VR)</th>
+            <th>Numerikal (NA)</th>
+            <th>Logika (L)</th>
+          </tr>
+        </thead>
+        <tbody id="psikotesTableBody">
+          <!-- Data rows will be inserted dynamically here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Button to Generate Excel File -->
+    <button class="generate-btn" onclick="generateExcel()">Generate Excel</button>
+
+    <!-- Graph Section -->
+    <canvas id="graphCanvas" width="400" height="200"></canvas>
+    <!-- Footer Section -->
+    <footer>
+      <div class="footer-content">
+        <div>
+          <h3>SMA Mutiara 17 Agustus</h3>
+          <p>Sistem Rekomendasi Jurusan untuk membantu siswa memilih jalur pendidikan yang tepat.</p>
+        </div>
+        <div class="contact">
+          <h3>Kontak</h3>
+          <p>Email: info@smamutiara17.sch.id</p>
+          <p>Telepon: (021) 1234-5678</p>
+        </div>
+        <div class="alamat">
+          <h3>Alamat</h3>
+          <p>Jl. Kemerdekaan No. 17, Jakarta Pusat</p>
+        </div>
+      </div>
+      <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Fetch data from Firebase and populate the table
+    window.onload = function () {
+      const username = localStorage.getItem('username');
+      
+      if (!username) {
+        window.location.href = "index.html";  // Redirect to login page if not logged in
+      } else {
+        document.getElementById("loggedInUser").innerText = username;
+      }
+
+      const studentRef = firebase.database().ref('students');
+      studentRef.once('value').then(snapshot => {
+        const data = snapshot.val();
+        const tableBody = document.getElementById('dataTableBody');
+         const psikotesTableBody = document.getElementById('psikotesTableBody');
+
+        let rowNumber = 1;
+
+        for (const nisn in data) {
+          const student = data[nisn];
+          const row = document.createElement('tr');
+
+           row.innerHTML = `
+            <td>${rowNumber}</td>
+            <td>${nisn}</td>
+            <td>${student.name}</td>
+            <td>${student.subjects.bahasaIndo}</td>
+            <td>${student.subjects.bahasaInggris}</td>
+            <td>${student.subjects.matematika}</td>
+            <td>${student.subjects.fisika}</td>
+            <td>${student.subjects.biologi}</td>
+            <td>${student.subjects.kimia}</td>
+            <td>${student.subjects.olahraga}</td>
+            <td>${student.subjects.PKN}</td>
+            <td>${student.subjects.geografi}</td>
+            <td>${student.subjects.sejarah}</td>
+            <td>Tunggu Pilihan</td> <!-- Default result, can be updated later -->
+          `;
+          
+          tableBody.appendChild(row);
+
+          const psikotesRow = document.createElement('tr');
+          psikotesRow.innerHTML = `
+            <td>${rowNumber}</td>
+            <td>${nisn}</td>
+            <td>${student.name}</td>
+            <td>${student.psikotes.kecerdasanUmum}</td>
+            <td>${student.psikotes.spatialReasoning}</td>
+            <td>${student.psikotes.mechanicalReasoning}</td>
+            <td>${student.psikotes.penalaranAbstrak}</td>
+            <td>${student.psikotes.pemahamanVerbal}</td>
+            <td>${student.psikotes.numerikal}</td>
+            <td>${student.psikotes.logika}</td>
+          `;
+          
+          psikotesTableBody.appendChild(psikotesRow);
+
+          rowNumber++;
+        }
+      
+      }).catch(error => {
+        console.error('Error fetching data:', error);
+        alert('Failed to fetch data');
+      });
+    }
+
+    // Function to generate Excel file from both tables
+    function generateExcel() {
+      // Get the tables
+      const studentTable = document.getElementById("studentTable");
+      const psikotesTable = document.getElementById("psikotesTable");
+
+      // Create a workbook and add the studentTable data
+      const workbook = XLSX.utils.book_new();
+
+      // Nilai Akademik Table (sheet 1)
+      const akademikSheet = XLSX.utils.table_to_sheet(studentTable);
+      XLSX.utils.book_append_sheet(workbook, akademikSheet, "Nilai Akademik");
+
+      // Nilai Psikotes Table (sheet 2)
+      const psikotesSheet = XLSX.utils.table_to_sheet(psikotesTable);
+      XLSX.utils.book_append_sheet(workbook, psikotesSheet, "Nilai Psikotes");
+
+      // Save the Excel file
+      XLSX.writeFile(workbook, "input_nilai_data.xlsx");
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMA Mutiara 17 Agustus</title>
+    <!-- Include Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- Firebase custom JS script -->
+  <script src="firebase.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      color: #333;
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header img {
+      max-width: 80px; /* Smaller logo size */
+      margin-bottom: 15px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #1a1a1a;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .roles {
+      text-align: center;
+      border: 1px solid #ddd; /* Change the outer border to match inner border style */
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 40px;
+    }
+
+    .roles h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .role-cards {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    /* Role Cards */
+    .role-card {
+      background-color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      width: 150px; /* Smaller width */
+      transition: transform 0.3s ease, border 0.3s ease;
+      border: 1px solid #ddd; /* Outer border matching the inner border */
+      cursor: pointer;
+    }
+
+    /* Hover effect for the role cards */
+    .role-card:hover {
+      transform: translateY(-5px);
+      border: 2px solid #6c5ce7; /* Border color on hover */
+    }
+
+    /* Active state for selected role */
+    .role-card.active {
+      border: 2px solid #6c5ce7; /* Border color for active state */
+      background-color: #f1f1f1;
+    }
+
+    .role-card img {
+      width: 35px; /* Smaller icon size */
+      height: 35px;
+      margin-bottom: 10px;
+    }
+
+    .role-card h3 {
+      font-size: 1.1rem;
+      color: #1a1a1a;
+    }
+
+    .role-card p {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .role-inputs {
+      display: none;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .role-inputs input {
+      padding: 8px;
+      font-size: 1rem;
+      margin-bottom: 12px; /* Smaller margin */
+      width: 80%;
+      max-width: 320px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .role-inputs label {
+      font-size: 1rem;
+      color: #333;
+      display: block;
+      text-align: left;
+      margin-bottom: 5px;
+      width: 80%;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .role-inputs button {
+      padding: 10px 18px;
+      font-size: 1.1rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 80%;
+      max-width: 320px;
+    }
+
+    .role-inputs button:hover {
+      background-color: #2980b9;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    /* Smaller Additional Info Section */
+    .additional-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px; /* Reduced margin */
+      gap: 10px;
+    }
+
+    .info-card {
+      background-color: white;
+      padding: 12px;
+      width: 48%; /* Reduced width */
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      border: 1px solid #ddd; /* Outer border matching the inner border */
+    }
+
+    /* Hover effect for the info cards */
+    .info-card:hover {
+      transform: translateY(-5px);
+      border: 2px solid #6c5ce7; /* Border color on hover */
+    }
+
+    .info-card img {
+      width: 35px; /* Smaller icon size */
+      height: 35px;
+      margin-bottom: 10px;
+    }
+
+    .info-card h3 {
+      font-size: 1.2rem;
+      color: #1a1a1a;
+    }
+
+    .info-card p {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <header>
+      <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
+      <h1>SMA Mutiara 17 Agustus</h1>
+      <p>Sistem Rekomendasi Jurusan yang membantu siswa memilih jalur pendidikan yang tepat berdasarkan nilai akademik dan minat</p>
+    </header>
+
+    <!-- Role Selection Section -->
+    <section class="roles">
+      <h2>Pilih Role Anda</h2>
+      <div class="role-cards">
+        <div class="role-card" onclick="selectRole('Guru')">
+          <img src="https://img.icons8.com/?size=100&id=lYJJgzBvPs9M&format=png&color=000000" alt="Guru Icon">
+          <h3>Guru</h3>
+          <p>Input nilai siswa dan kelola data akademik</p>
+        </div>
+        <div class="role-card" onclick="selectRole('Siswa / Orang Tua')">
+          <img src="https://img.icons8.com/?size=100&id=kYED4qV5oD9S&format=png&color=000000" alt="Siswa Orang Tua Icon">
+          <h3>Siswa / Orang Tua</h3>
+          <p>Lihat nilai dan dapatkan rekomendasi jurusan</p>
+        </div>
+        <div class="role-card" onclick="selectRole('Admin')">
+          <img src="https://img.icons8.com/?size=100&id=TLKzpw4u5XoT&format=png&color=000000" alt="Admin Icon">
+          <h3>Admin</h3>
+          <p>Kelola sistem dan data pengguna</p>
+        </div>
+      </div>
+    </section>
+
+  <!-- Dynamic Inputs Section (Hidden Initially) -->
+  <div class="role-inputs" id="roleInputs">
+    <!-- Dropdown for Sign Up / Sign In -->
+    <select id="signupOrLogin">
+      <option value="signUp">Sign Up</option>
+      <option value="signIn">Sign In</option>
+    </select>
+    
+    <div id="roleNameInput"></div> <!-- Dynamic Role Name Field -->
+    <div id="roleAdditionalInput"></div> <!-- Dynamic Additional Input (Email, NISN, Password) -->
+    
+    <button onclick="submitForm()">Masuk</button>
+  </div>
+
+    <!-- Additional Information Section -->
+    <section class="additional-info">
+      <div class="info-card">
+        <img src="https://img.icons8.com/?size=100&id=7kZSmEyroNI0&format=png&color=000000" alt="Analysis Icon">
+        <h3>Analisis Mendalam</h3>
+        <p>Menggunakan 3 metode rekomendasi: SAW, Fuzzy Logic, dan Profile Matching</p>
+      </div>
+      <div class="info-card">
+        <img src="https://img.icons8.com/?size=100&id=97390&format=png&color=000000" alt="Multi-Role Access Icon">
+        <h3>Multi-Role Access</h3>
+        <p>Akses khusus untuk guru, siswa, orang tua, dan admin sekolah</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
+    </footer>
+  </div>
+
+<script>
+  function selectRole(roleName) {
+    const roleInputs = document.getElementById('roleInputs');
+    roleInputs.style.display = 'block';
+
+    const roleNameInput = document.getElementById('roleNameInput');
+    const roleAdditionalInput = document.getElementById('roleAdditionalInput');
+    const signupOrLogin = document.getElementById('signupOrLogin');
+    
+    // Dynamically display form based on role selected
+    if (roleName === 'Guru' || roleName === 'Admin') {
+      roleNameInput.innerHTML = `<label for="email">Email:</label><input type="email" id="email" placeholder="Masukkan email" />`;
+      roleAdditionalInput.innerHTML = '<label for="password">Password:</label><input type="password" id="password" placeholder="Masukkan password"/>';
+    } else if (roleName === 'Siswa / Orang Tua') {
+      roleNameInput.innerHTML = `<label for="email">Email:</label><input type="email" id="email" placeholder="Masukkan email" />`;
+      roleAdditionalInput.innerHTML = `<label for="nisn">NISN:</label><input type="text" id="nisn" placeholder="Masukkan NISN" />`;
+    }
+
+    // Handle login/signup action when button is clicked
+    document.querySelector("button").onclick = function () {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password') ? document.getElementById('password').value : null;
+      const nisn = document.getElementById('nisn') ? document.getElementById('nisn').value : null;
+
+      console.log('Attempting login/signup with:', email, password);  // Debugging log
+
+      if (!email || (!password && (roleName === 'Guru' || roleName === 'Admin'))) {
+        alert('Please enter both email and password.');
+        return; // Exit the function if the fields are empty
+      }
+
+      if (roleName === 'Guru' || roleName === 'Admin') {
+        const action = signupOrLogin.value;  // This determines whether it's a sign-up or login action
+
+        if (action === 'signUp') {
+          // Sign-up process for Guru/Admin
+          firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              console.log('Sign-up successful', user);  // Debugging log
+              localStorage.setItem('username', user.email);  // Store the logged-in user's email for future use
+              window.location.href = 'gurudashboard.html';  // Redirect to Guru Dashboard
+            })
+            .catch((error) => {
+              const errorCode = error.code;
+              const errorMessage = error.message;
+              console.error('Sign-up failed:', errorCode, errorMessage);  // Debugging log
+              alert('Sign-up failed: ' + errorMessage);  // Show Firebase error
+            });
+        } else {
+          // Sign-in process for Guru/Admin
+          firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              console.log('Login successful', user);  // Debugging log
+              localStorage.setItem('username', user.email);  // Store the logged-in user's email for future use
+              window.location.href = 'gurudashboard.html';  // Redirect to Guru Dashboard
+            })
+            .catch((error) => {
+              const errorCode = error.code;
+              const errorMessage = error.message;
+              console.error('Login failed:', errorCode, errorMessage);  // Debugging log
+              alert('Login failed: ' + errorMessage);  // Show Firebase login error
+            });
+        }
+      } else if (roleName === 'Siswa / Orang Tua') {
+        // Handle login for Siswa / Orang Tua: Check if NISN exists in the database
+        const databaseRef = firebase.database().ref('students'); // reference to your students node
+        const studentRef = databaseRef.orderByChild('nisn').equalTo(nisn);
+
+        studentRef.once('value').then(snapshot => {
+          if (snapshot.exists()) {
+            // NISN found in the database, proceed to the siswa/orangtua page
+            window.location.href = 'siswa_orangtua.html';  // Redirect to siswa/orangtua page
+          } else {
+            // NISN not found, show error message
+            alert("NISN tidak terdaftar, silahkan hubungi guru BK anda");
+          }
+        }).catch(error => {
+          console.error("Error checking NISN:", error);
+          alert("Error checking NISN. Please try again later.");
+        });
+      }
+    };
+  }
+</script>
+
+</body>
+</html>
