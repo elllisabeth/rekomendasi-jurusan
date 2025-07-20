@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - SMA Mutiara 17 Agustus</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <!-- Custom Firebase Config -->
+  <script src="firebase.js"></script>
+  <!-- Font & Style -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <header>
+      <div class="header-content">
+        <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
+        <h1>SMA Mutiara 17 Agustus</h1>
+      </div>
+      <div class="header-nav">
+        <a href="admin.html" class="nav-link">
+          <img src="https://img.icons8.com/?size=100&id=TLKzpw4u5XoT&format=png&color=000000" class="nav-icon"> Admin
+        </a>
+        <div class="nav-link account">
+          <img src="https://img.icons8.com/?size=100&id=151IAtg8gTZE&format=png&color=000000" class="nav-icon">
+          <span id="loggedInUser">admin</span>
+        </div>
+        <a href="#" class="nav-link logout" onclick="handleLogout(event)">
+          <img src="https://img.icons8.com/?size=100&id=13925&format=png&color=000000" class="nav-icon"> Logout
+        </a>
+      </div>
+    </header>
+
+    <!-- DASHBOARD CONTENT -->
+    <div class="admin-dashboard-container">
+      <div class="admin-section-title">Admin Dashboard</div>
+      <div class="stats-wrapper">
+        <div class="admin-card">
+          <h3><img src="https://img.icons8.com/?size=100&id=118237&format=png&color=308cff" style="height:24px;"> Jumlah User</h3>
+          <div class="card-value" id="userCount">-</div>
+          <div class="card-desc">Total semua user terdaftar</div>
+        </div>
+        <div class="admin-card">
+          <h3><img src="https://img.icons8.com/?size=100&id=PJleCo3so0R2&format=png&color=000000" style="height:24px;"> Jumlah Siswa</h3>
+          <div class="card-value" id="studentCount">-</div>
+          <div class="card-desc">Akun siswa yang aktif</div>
+        </div>
+        <div class="admin-card">
+          <h3><img src="https://img.icons8.com/?size=100&id=lYJJgzBvPs9M&format=png&color=000000" style="height:24px;"> Jumlah Guru</h3>
+          <div class="card-value" id="teacherCount">-</div>
+          <div class="card-desc">Total guru yang terdaftar</div>
+        </div>
+        <div class="admin-card">
+            <h3><img src="https://img.icons8.com/?size=100&id=106982&format=png&color=308cff" style="height:24px;">
+            Aktivitas Terakhir
+            </h3>
+            <div class="card-value" id="lastActivity">-</div>
+            <div class="card-desc">Terakhir edit/tambah/hapus data</div>
+        </div>
+        <div class="admin-card">
+          <h3><img src="https://img.icons8.com/?size=100&id=80463&format=png&color=308cff" style="height:24px;"> Jumlah Admin</h3>
+          <div class="card-value" id="adminCount">-</div>
+          <div class="card-desc">Total admin terdaftar</div>
+        </div>
+        </div>
+      </div>
+
+      <!-- MASTER DATA SECTION -->
+      <div class="masterdata-section">
+        <div class="masterdata-card">
+          <h3>
+            <img src="https://img.icons8.com/?size=100&id=85161&format=png&color=308cff" style="height:22px;">
+            Data Siswa
+          </h3>
+          <div class="masterdata-value" id="masterStudentCount">-</div>
+          <div class="masterdata-desc">Lihat & kelola data seluruh siswa</div>
+          <button class="masterdata-action" onclick="showStudentTable()">Lihat Siswa</button>
+        </div>
+        <div class="masterdata-card">
+          <h3>
+            <img src="https://img.icons8.com/?size=100&id=lYJJgzBvPs9M&format=png&color=000000" style="height:22px;">
+            Data Guru
+          </h3>
+          <div class="masterdata-value" id="masterTeacherCount">-</div>
+          <div class="masterdata-desc">Kelola data guru aktif</div>
+          <button class="masterdata-action" onclick="showTeacherTable()">Lihat Guru</button>
+        </div>
+        <div class="masterdata-card">
+            <h3>
+              <img src="https://img.icons8.com/?size=100&id=80463&format=png&color=308cff" style="height:22px;">
+                Data Admin
+            </h3>
+            <div class="masterdata-value" id="masterAdminCount">-</div>
+            <div class="masterdata-desc">Lihat & kelola data admin</div>
+            <button class="masterdata-action" onclick="showAdminTable()">Lihat Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POPUP TABLE TEMPAT MUNCUL DATA -->
+    <div id="popupAdmin" style="display:none;"></div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-content">
+        <div>
+          <h3>SMA Mutiara 17 Agustus</h3>
+          <p>Sistem Rekomendasi Jurusan untuk membantu siswa memilih jalur pendidikan yang tepat.</p>
+        </div>
+        <div class="contact">
+          <h3>Kontak</h3>
+          <p>Email: info@smamutiara17.sch.id</p>
+          <p>Telepon: (021) 1234-5678</p>
+        </div>
+        <div class="alamat">
+          <h3>Alamat</h3>
+          <p>Jl. Kemerdekaan No. 17, Jakarta Pusat</p>
+        </div>
+      </div>
+      <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- SCRIPT ADMIN DASHBOARD -->
+<script>
+  // USER SESSION & LOGOUT
+  const username = localStorage.getItem('username');
+  if (!username) {
+      window.location.href = "index.html";
+  } else {
+      document.getElementById("loggedInUser").innerText = username.split("@")[0];
+  }
+
+  // --- LOG AKTIVITAS (Letakkan di atas agar bisa dipanggil di mana saja)
+  function logActivity(desc) {
+    const now = new Date();
+    const tanggal = now.getFullYear() + '-' +
+      String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0') + ' ' +
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+    firebase.database().ref('activities').push({
+      desc: desc,
+      date: tanggal
+    });
+  }
+
+  // --- DASHBOARD STATS
+  let latestStudentData = {};
+  let latestTeacherData = {};
+  let latestAdminData = {};
+
+  function fetchDashboardStats() {
+    // Hitung total user dari admins, teachers, dan students
+    Promise.all([
+      firebase.database().ref('admins').once('value'),
+      firebase.database().ref('teachers').once('value'),
+      firebase.database().ref('students').once('value')
+    ]).then(([adminsSnap, teachersSnap, studentsSnap]) => {
+      const adminCount = adminsSnap.val() ? Object.keys(adminsSnap.val()).length : 0;
+      const teacherCount = teachersSnap.val() ? Object.keys(teachersSnap.val()).length : 0;
+      const studentCount = studentsSnap.val() ? Object.keys(studentsSnap.val()).length : 0;
+      document.getElementById('userCount').innerText = adminCount + teacherCount + studentCount;
+    });
+
+    firebase.database().ref('students').once('value').then(snapshot => {
+      const students = snapshot.val() || {};
+      document.getElementById('studentCount').innerText = Object.keys(students).length;
+      document.getElementById('masterStudentCount').innerText = Object.keys(students).length;
+    });
+    firebase.database().ref('teachers').once('value').then(snapshot => {
+      const teachers = snapshot.val() || {};
+      document.getElementById('teacherCount').innerText = Object.keys(teachers).length;
+      document.getElementById('masterTeacherCount').innerText = Object.keys(teachers).length;
+    });
+    firebase.database().ref('admins').once('value').then(snapshot => {
+      const admins = snapshot.val() || {};
+      document.getElementById('adminCount').innerText = Object.keys(admins).length;
+      document.getElementById('masterAdminCount').innerText = Object.keys(admins).length;
+    });
+    firebase.database().ref('activities').limitToLast(1).once('value').then(snapshot => {
+      let last = '-';
+      snapshot.forEach(child => {
+        last = child.val().desc + ' (' + (child.val().date || '') + ')';
+      });
+      document.getElementById('lastActivity').innerText = last;
+    });
+  }
+  fetchDashboardStats();
+
+  // --- TABLE UTILITY
+  function showStudentTable() {
+    firebase.database().ref('students').once('value').then(snapshot => {
+      const students = snapshot.val() || {};
+      latestStudentData = students;
+      let table = `
+        <div class="table-container" style="max-height:60vh;overflow:auto;margin:22px 0;">
+          <button onclick="exportStudentsExcel()" style="float:right;margin-bottom:10px;">Export Excel</button>
+          <table id="studentsTable">
+            <thead>
+              <tr>
+                <th>NISN</th>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      for (const nisn in students) {
+        const s = students[nisn];
+        table += `
+          <tr>
+            <td>${nisn}</td>
+            <td>${s.name || '-'}</td>
+            <td>${s.email || '-'}</td>
+            <td>
+              <button onclick="editStudent('${nisn}')">Edit</button>
+              <button onclick="deleteStudent('${nisn}')">Hapus</button>
+            </td>
+          </tr>
+        `;
+      }
+      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
+      showPopup(table);
+    });
+  }
+
+  function showTeacherTable() {
+    firebase.database().ref('teachers').once('value').then(snapshot => {
+      const teachers = snapshot.val() || {};
+      latestTeacherData = teachers;
+      let table = `
+        <div class="table-container" style="max-height:60vh;overflow:auto;margin:22px 0;">
+          <button onclick="exportTeachersExcel()" style="float:right;margin-bottom:10px;">Export Excel</button>
+          <table id="teachersTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      for (const id in teachers) {
+        const t = teachers[id];
+        table += `
+          <tr>
+            <td>${id}</td>
+            <td>${t.name || '-'}</td>
+            <td>${t.email || '-'}</td>
+            <td>
+              <button onclick="editTeacher('${id}')">Edit</button>
+              <button onclick="deleteTeacher('${id}')">Hapus</button>
+            </td>
+          </tr>
+        `;
+      }
+      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
+      showPopup(table);
+    });
+  }
+
+  function showAdminTable() {
+    firebase.database().ref('admins').once('value').then(snapshot => {
+      const admins = snapshot.val() || {};
+      latestAdminData = admins;
+      let table = `
+        <div class="table-container" style="max-height:60vh;overflow:auto;margin:22px 0;">
+          <button onclick="exportAdminsExcel()" style="float:right;margin-bottom:10px;">Export Excel</button>
+          <table id="adminsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      for (const id in admins) {
+        const a = admins[id];
+        table += `
+          <tr>
+            <td>${id}</td>
+            <td>${a.name || '-'}</td>
+            <td>${a.email || '-'}</td>
+          </tr>
+        `;
+      }
+      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
+      showPopup(table);
+    });
+  }
+
+  // --- POPUP UTILITY
+  function showPopup(html) {
+    let popup = document.getElementById('popupAdmin');
+    popup.innerHTML = `
+      <div class="popup-inner" style="position:relative;">
+        <button class="popup-close-btn" onclick="closeTablePopup()" title="Tutup">×</button>
+        ${html}
+      </div>
+    `;
+    popup.style.display = 'flex';
+    popup.onclick = (e) => {
+      if (e.target === popup) closeTablePopup();
+    };
+  }
+  function closeTablePopup() {
+    const popup = document.getElementById('popupAdmin');
+    if (popup) popup.style.display = 'none';
+  }
+
+  // --- FITUR EDIT SISWA/GURU (Include logActivity)
+  window.editStudent = function(nisn) {
+    const s = latestStudentData[nisn];
+    showPopup(`
+      <h3>Edit Data Siswa</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:340px;">
+        <label>NISN (tidak dapat diedit)</label>
+        <input type="text" value="${nisn}" disabled>
+        <label>Nama</label>
+        <input type="text" id="editSiswaNama" value="${s.name || ''}">
+        <label>Email</label>
+        <input type="email" id="editSiswaEmail" value="${s.email || ''}">
+        <button onclick="saveStudentEdit('${nisn}')">Simpan</button>
+        <button onclick="closeTablePopup()">Batal</button>
+      </div>
+    `);
+  };
+  window.saveStudentEdit = function(nisn) {
+    const nama = document.getElementById('editSiswaNama').value.trim();
+    const email = document.getElementById('editSiswaEmail').value.trim();
+    if (!nama) { alert('Nama tidak boleh kosong!'); return; }
+    firebase.database().ref('students/' + nisn).update({ name: nama, email: email }).then(() => {
+      logActivity(`${username.split('@')[0]} mengedit data siswa: ${nama} (NISN: ${nisn})`);
+      alert('Data siswa diperbarui.');
+      closeTablePopup();
+      fetchDashboardStats();
+      showStudentTable();
+    });
+  };
+
+  window.editTeacher = function(id) {
+    const t = latestTeacherData[id];
+    showPopup(`
+      <h3>Edit Data Guru</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:340px;">
+        <label>ID (tidak dapat diedit)</label>
+        <input type="text" value="${id}" disabled>
+        <label>Nama</label>
+        <input type="text" id="editGuruNama" value="${t.name || ''}">
+        <label>Email</label>
+        <input type="email" id="editGuruEmail" value="${t.email || ''}">
+        <button onclick="saveTeacherEdit('${id}')">Simpan</button>
+        <button onclick="closeTablePopup()">Batal</button>
+      </div>
+    `);
+  };
+  window.saveTeacherEdit = function(id) {
+    const nama = document.getElementById('editGuruNama').value.trim();
+    const email = document.getElementById('editGuruEmail').value.trim();
+    if (!nama) { alert('Nama tidak boleh kosong!'); return; }
+    firebase.database().ref('teachers/' + id).update({ name: nama, email: email }).then(() => {
+      logActivity(`${username.split('@')[0]} mengedit data guru: ${nama} (ID: ${id})`);
+      alert('Data guru diperbarui.');
+      closeTablePopup();
+      fetchDashboardStats();
+      showTeacherTable();
+    });
+  };
+
+  // --- FITUR DELETE (Include logActivity)
+  window.deleteStudent = function(nisn) {
+    if (confirm('Yakin hapus siswa ini?')) {
+      firebase.database().ref('students/' + nisn).remove().then(() => {
+        logActivity(`${username.split('@')[0]} menghapus data siswa (NISN: ${nisn})`);
+        alert('Data dihapus.');
+        closeTablePopup();
+        fetchDashboardStats();
+        showStudentTable();
+      });
+    }
+  };
+  window.deleteTeacher = function(id) {
+    if (confirm('Yakin hapus guru ini?')) {
+      firebase.database().ref('teachers/' + id).remove().then(() => {
+        logActivity(`${username.split('@')[0]} menghapus data guru (ID: ${id})`);
+        alert('Data dihapus.');
+        closeTablePopup();
+        fetchDashboardStats();
+        showTeacherTable();
+      });
+    }
+  };
+
+  // --- EXPORT TO EXCEL SISWA
+  window.exportStudentsExcel = function() {
+    const data = [];
+    for (const nisn in latestStudentData) {
+      const s = latestStudentData[nisn];
+      data.push({
+        NISN: nisn,
+        Nama: s.name || '',
+        Email: s.email || '',
+      });
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DataSiswa");
+    XLSX.writeFile(wb, 'Data_Siswa.xlsx');
+  };
+
+  // --- EXPORT TO EXCEL GURU
+  window.exportTeachersExcel = function() {
+    const data = [];
+    for (const id in latestTeacherData) {
+      const t = latestTeacherData[id];
+      data.push({
+        ID: id,
+        Nama: t.name || '',
+        Email: t.email || '',
+      });
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DataGuru");
+    XLSX.writeFile(wb, 'Data_Guru.xlsx');
+  };
+
+  // --- EXPORT TO EXCEL ADMIN
+  window.exportAdminsExcel = function() {
+    const data = [];
+    for (const id in latestAdminData) {
+      const a = latestAdminData[id];
+      data.push({
+        ID: id,
+        Nama: a.name || '',
+        Email: a.email || '',
+      });
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DataAdmin");
+    XLSX.writeFile(wb, 'Data_Admin.xlsx');
+  };
+
+    function showLoadingPopup(text = "Loading...") {
+    let loadingPopup = document.getElementById('loadingPopup');
+    if (!loadingPopup) {
+        loadingPopup = document.createElement('div');
+        loadingPopup.id = 'loadingPopup';
+        loadingPopup.style.cssText = `
+        position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);
+        z-index:99999;display:flex;align-items:center;justify-content:center;
+        `;
+        loadingPopup.innerHTML = `
+        <div style="background:#fff;padding:32px 50px;border-radius:18px;box-shadow:0 6px 40px #0001;display:flex;flex-direction:column;align-items:center;">
+            <div style="margin-bottom:18px">
+            <svg width="46" height="46" viewBox="0 0 50 50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#23A6F0" stroke-width="6" stroke-linecap="round" stroke-dasharray="100,60">
+                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.85s" repeatCount="indefinite"/>
+                </circle>
+            </svg>
+            </div>
+            <span id="loadingText" style="font-size:18px;font-weight:600">${text}</span>
+        </div>
+        `;
+        document.body.appendChild(loadingPopup);
+    } else {
+        document.getElementById('loadingText').innerText = text;
+        loadingPopup.style.display = 'flex';
+    }
+    }
+    function hideLoadingPopup() {
+        const loadingPopup = document.getElementById('loadingPopup');
+        if (loadingPopup) loadingPopup.style.display = 'none';
+}
+    function handleLogout(event) {
+      event.preventDefault();
+      showLoadingPopup("Sedang logout...");
+      firebase.auth().signOut()
+        .then(function() {
+          setTimeout(function() {
+            window.location.href = "index.html";
+          }, 900);
+        })
+        .catch(function(error) {
+          hideLoadingPopup();
+          alert("Logout gagal! Silakan coba lagi.");
+          console.error(error);
+        });
+    }
+</script>
+    <!-- POPUP LOADING -->
+    <div id="loadingPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.13); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; box-shadow:0 4px 24px #23A6F030; padding:32px 38px; display:flex; flex-direction:column; align-items:center;">
+        <div class="spinner" style="margin-bottom:18px; width:46px; height:46px;">
+        <svg width="46" height="46" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" fill="none" stroke="#23A6F0" stroke-width="6" stroke-linecap="round" stroke-dasharray="100,60">
+            <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.85s" repeatCount="indefinite"/>
+            </circle>
+        </svg>
+        </div>
+        <div id="loadingText" style="font-size:1.13rem; color:#2b426b; font-weight:500; letter-spacing:0.5px;">
+        Loading...
+        </div>
+    </div>
+</div>
+</body>
+</html>

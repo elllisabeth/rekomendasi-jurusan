@@ -8,10 +8,13 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
 
   <!-- Firebase custom JS script -->
   <script src="firebase.js"></script>
-
+  <!---Link Font-->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,16 +37,25 @@
           <img src="https://img.icons8.com/?size=100&id=151IAtg8gTZE&format=png&color=000000" alt="Account Icon" class="nav-icon">
           <span id="loggedInUser">guru1</span> <!-- Display Username Here -->
         </div>
-        <a href="logout.html" class="nav-link logout">
+        <a href="#" class="nav-link logout" onclick="handleLogout(event)">
           <img src="https://img.icons8.com/?size=100&id=13925&format=png&color=000000" alt="Logout Icon" class="nav-icon"> Logout
         </a>
       </div>    
     </header>
 
-    <!-- Guru Dashboard Content -->
-    <section class="dashboard">
-      <h2>Input Data Siswa</h2>
 
+    <!-- Guru Dashboard Content -->
+  <section class="dashboard">
+    <h2>Input Data Siswa</h2>
+  <div style="margin:18px 0;">
+    <label for="importExcel" style="font-weight:600;">Import Data Siswa via Excel:</label>
+    <input type="file" id="importExcel" accept=".xlsx, .xls" style="margin-left:8px;" />
+    <button onclick="importExcelToFirebase()">Upload</button>
+    <!-- Tambahkan tombol download di sini -->
+    <a href="TemplateInputNilaiSiswa.xlsx" download style="margin-left:16px;font-size:0.95rem;text-decoration:underline;color:#3270e0;">
+      Download Template Excel 2 Sheet
+    </a>
+  </div>
   <!-- Layout for Nama Siswa and NISN, side by side -->
   <div class="form-row">
     <div class="input-group">
@@ -82,10 +94,10 @@
       <label for="olahraga">Olahraga:</label>
       <input type="number" id="olahraga" placeholder="Nilai Olahraga" required class="input-field">
       
-      <label for="olahraga">Informatika:</label>
+      <label for="informatika">Informatika:</label>
       <input type="number" id="Informatika" placeholder="Nilai Informatika" required class="input-field">
 
-      <label for="PKN">PKN:</label>
+      <label for="PKN">pkn:</label>
       <input type="number" id="PKN" placeholder="Nilai PKN" required class="input-field">
 
       <label for="geografi">Geografi:</label>
@@ -121,7 +133,7 @@
     </div>
   </div>
   <!-- Note Section -->
-  <div class="container-h4">
+  <div class="note">
     <h4>Note:</h4>
     <p>Nilai hanya bisa bilangan bulat.</p>
   </div>
@@ -151,11 +163,18 @@
   </footer>
 
 <script>
-    const username = localStorage.getItem('username');
+  function showLoadingPopup(text = "Loading...") {
+    document.getElementById('loadingText').innerText = text;
+    document.getElementById('loadingPopup').style.display = 'flex';
+  }
+  function hideLoadingPopup() {
+    document.getElementById('loadingPopup').style.display = 'none';
+  }
+      const username = localStorage.getItem('username');
   if (!username) {
     window.location.href = "index.html";  // Redirect to login if not logged in
   } else {
-    document.getElementById("loggedInUser").innerText = username; // Show the logged-in user's name
+    document.getElementById("loggedInUser").innerText = username.split("@")[0];// Show the logged-in user's name
   }
   function saveData() {
   console.log('Button clicked!');
@@ -168,44 +187,36 @@
     alert('Please fill in all required fields!');
     return;  // Stop execution if the elements are not found
   }
-
-  const nisn = nisnElement.value;
-  const studentName = studentNameElement.value;
+  const nisn = document.getElementById('nisn').value;
+  const studentName = document.getElementById('studentName').value;
 
   let studentData = {
     name: studentName,
     nisn: nisn,
-    subjects: {},  // For Nilai Akademik
-    psikotes: {}   // For Nilai Psikotes
+    akademik: {
+      bahasaIndo: document.getElementById('bahasaIndo').value || 0,
+      bahasaInggris: document.getElementById('bahasaInggris').value || 0,
+      matematika: document.getElementById('matematika').value || 0,
+      fisika: document.getElementById('fisika').value || 0,
+      biologi: document.getElementById('biologi').value || 0,
+      kimia: document.getElementById('kimia').value || 0,
+      olahraga: document.getElementById('olahraga').value || 0,
+      Informatika: document.getElementById('Informatika').value || 0,
+      PKN: document.getElementById('PKN').value || 0,
+      geografi: document.getElementById('geografi').value || 0,
+      sejarah: document.getElementById('sejarah').value || 0,
+    },
+    psikotes: {
+      kecerdasanUmum: document.getElementById('kecerdasanUmum').value,
+      spatialReasoning: document.getElementById('spatialReasoning').value,
+      mechanicalReasoning: document.getElementById('mechanicalReasoning').value,
+      penalaranAbstrak: document.getElementById('penalaranAbstrak').value,
+      pemahamanVerbal: document.getElementById('pemahamanVerbal').value,
+      numerikal: document.getElementById('numerikal').value,
+      logika: document.getElementById('logika').value
+    }
   };
 
-  // Collect Nilai Akademik Data
-  studentData.subjects = {
-    bahasaIndo: document.getElementById('bahasaIndo').value || 0,
-    bahasaInggris: document.getElementById('bahasaInggris').value || 0,
-    matematika: document.getElementById('matematika').value || 0,
-    fisika: document.getElementById('fisika').value || 0,
-    Informatika: document.getElementById('Informatika').value || 0,
-    biologi: document.getElementById('biologi').value || 0,
-    kimia: document.getElementById('kimia').value || 0,
-    olahraga: document.getElementById('PKN').value || 0,
-    PKN: document.getElementById('olahraga').value || 0,
-    geografi: document.getElementById('geografi').value || 0,
-    sejarah: document.getElementById('sejarah').value || 0
-  };
-
-  // Collect Nilai Psikotes Data
-  studentData.psikotes = {
-    kecerdasanUmum: document.getElementById('kecerdasanUmum').value,
-    spatialReasoning: document.getElementById('spatialReasoning').value,
-    mechanicalReasoning: document.getElementById('mechanicalReasoning').value,
-    penalaranAbstrak: document.getElementById('penalaranAbstrak').value,
-    pemahamanVerbal: document.getElementById('pemahamanVerbal').value,
-    numerikal: document.getElementById('numerikal').value,
-    logika: document.getElementById('logika').value
-  };
-
-  // Save data to Firebase under the student's NISN
   firebase.database().ref('students/' + nisn).set(studentData)
     .then(() => {
       alert('Data berhasil disimpan!');
@@ -214,7 +225,138 @@
       console.error('Error saving data:', error);
       alert('Gagal menyimpan data, coba lagi.');
     });
+  }
+
+    function handleLogout(event) {
+      event.preventDefault();
+      showLoadingPopup("Sedang logout...");
+      firebase.auth().signOut()
+        .then(function() {
+          setTimeout(function() {
+            window.location.href = "index.html";
+          }, 900);
+        })
+        .catch(function(error) {
+          hideLoadingPopup();
+          alert("Logout gagal! Silakan coba lagi.");
+          console.error(error);
+        });
+    }
+
+  function importExcelToFirebase() {
+  const fileInput = document.getElementById('importExcel');
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Pilih file Excel terlebih dahulu!");
+    return;
+  }
+  showLoadingPopup("Memproses file Excel...");
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    // Sheet Akademik
+    const sheetAkademik = workbook.Sheets["Akademik"];
+    const dataAkademik = XLSX.utils.sheet_to_json(sheetAkademik, { header: 1 });
+    // Sheet Psikotes
+    const sheetPsikotes = workbook.Sheets["Psikotes"];
+    const dataPsikotes = XLSX.utils.sheet_to_json(sheetPsikotes, { header: 1 });
+
+    // Index header sheet Akademik
+    const headerAkademik = dataAkademik[0].map(h => h.toLowerCase().trim());
+    const expectedAkademik = ["nisn","nama","bahasa indonesia","bahasa inggris","matematika","fisika","biologi","kimia","olahraga","Informatika","PKN","geografi","sejarah"];
+    const matchA = expectedAkademik.every((h, i) => headerAkademik[i] === h);
+
+    // Baca header psikotes
+    const headerPsikotes = dataPsikotes[0].map(h => h.toLowerCase().trim());
+    const expectedPsikotes = ["nisn","nama","kecerdasan umum","spatial reasoning","mechanical reasoning","penalaran abstrak","pemahaman verbal","numerikal","logika"];
+
+    // DEBUG: tampilkan header yang terbaca untuk pengecekan manual
+    console.log('Header Psikotes:', headerPsikotes);
+    alert('Header Psikotes yang terbaca: ' + JSON.stringify(headerPsikotes));
+
+    // Validasi: semua header expected harus ADA di sheet (tidak harus urut persis)
+    const allMatch = expectedPsikotes.every(h => headerPsikotes.includes(h));
+    if (!allMatch) {
+      hideLoadingPopup();
+      alert("Header Excel tidak sesuai template (sheet Psikotes)!\nKolom harus: " + expectedPsikotes.join(", "));
+      return;
+    }
+    // Buat mapping NISN untuk merge
+    const mapping = {};
+
+      // Saat memproses sheet Akademik
+      for (let i = 1; i < dataAkademik.length; i++) {
+        const row = dataAkademik[i];
+        if (!row[0]) continue;
+        const nisn = row[0].toString().trim();
+        if (!mapping[nisn]) mapping[nisn] = { nisn: nisn };
+        mapping[nisn].name = row[1] || "";    // GUNAKAN HANYA 'name' di root!
+        mapping[nisn].akademik = {
+          bahasaIndo: row[2] || 0,
+          bahasaInggris: row[3] || 0,
+          matematika: row[4] || 0,
+          fisika: row[5] || 0,
+          biologi: row[6] || 0,
+          kimia: row[7] || 0,
+          olahraga: row[8] || 0,
+          Informatika: row[9] || 0,
+          PKN: row[10] || 0,
+          geografi: row[11] || 0,
+          sejarah: row[12] || 0
+        };
+
+      }
+      // Tambahkan/merge data Psikotes
+      for (let i = 1; i < dataPsikotes.length; i++) {
+        const row = dataPsikotes[i];
+        if (!row[0]) continue;
+        const nisn = row[0].toString().trim();
+        const nama = row[1] ? row[1].toString().trim() : '';
+        if (!mapping[nisn]) mapping[nisn] = { nisn: nisn };
+        // Jika nama di sheet Psikotes ada dan di mapping belum ada nama, masukkan namanya
+        if (nama && !mapping[nisn].name) mapping[nisn].name = nama;
+        mapping[nisn].psikotes = {
+          kecerdasanUmum: row[2] || 0,
+          spatialReasoning: row[3] || 0,
+          mechanicalReasoning: row[4] || 0,
+          penalaranAbstrak: row[5] || 0,
+          pemahamanVerbal: row[6] || 0,
+          numerikal: row[7] || 0,
+          logika: row[8] || 0
+        }
+      }
+
+    // Simpan ke Firebase
+    firebase.database().ref('students').update(mapping)
+      .then(() => {
+        hideLoadingPopup();
+        alert("Import selesai!");
+        location.reload();
+      }).catch(err => {
+        hideLoadingPopup();
+        alert('Import gagal: ' + err.message);
+      });
+  };
+  reader.readAsArrayBuffer(file);
 }
 </script>
+<!-- POPUP LOADING -->
+<div id="loadingPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.13); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:18px; box-shadow:0 4px 24px #23A6F030; padding:32px 38px; display:flex; flex-direction:column; align-items:center;">
+    <div class="spinner" style="margin-bottom:18px; width:46px; height:46px;">
+      <svg width="46" height="46" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#23A6F0" stroke-width="6" stroke-linecap="round" stroke-dasharray="100,60">
+          <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.85s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    </div>
+    <div id="loadingText" style="font-size:1.13rem; color:#2b426b; font-weight:500; letter-spacing:0.5px;">
+      Loading...
+    </div>
+  </div>
+</div>
 </body>
 </html>

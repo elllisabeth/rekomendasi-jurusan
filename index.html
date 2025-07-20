@@ -10,6 +10,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <!-- Firebase custom JS script -->
   <script src="firebase.js"></script>
+    <!---Link Font-->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -278,8 +280,15 @@
       <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
     </footer>
   </div>
-
 <script>
+  function showLoadingPopup(text = "Loading...") {
+    document.getElementById('loadingText').innerText = text;
+    document.getElementById('loadingPopup').style.display = 'flex';
+  }
+  function hideLoadingPopup() {
+    document.getElementById('loadingPopup').style.display = 'none';
+  }
+
   function selectRole(roleName) {
     const roleInputs = document.getElementById('roleInputs');
     roleInputs.style.display = 'block';
@@ -303,68 +312,140 @@
       const password = document.getElementById('password') ? document.getElementById('password').value : null;
       const nisn = document.getElementById('nisn') ? document.getElementById('nisn').value : null;
 
-      console.log('Attempting login/signup with:', email, password);  // Debugging log
-
       if (!email || (!password && (roleName === 'Guru' || roleName === 'Admin'))) {
-        alert('Please enter both email and password.');
-        return; // Exit the function if the fields are empty
+        alert('Silakan isi email dan password.');
+        return;
       }
 
       if (roleName === 'Guru' || roleName === 'Admin') {
-        const action = signupOrLogin.value;  // This determines whether it's a sign-up or login action
+        const action = signupOrLogin.value;
 
         if (action === 'signUp') {
-          // Sign-up process for Guru/Admin
+          // === SIGN UP GURU/ADMIN ===
           firebase.auth().createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
               const user = userCredential.user;
-              console.log('Sign-up successful', user);  // Debugging log
-              localStorage.setItem('username', user.email);  // Store the logged-in user's email for future use
-              window.location.href = 'gurudashboard.html';  // Redirect to Guru Dashboard
+              localStorage.setItem('username', user.email);
+
+              // Jika Guru, masukkan ke database teachers
+              if (roleName === "Guru") {
+                firebase.database().ref('teachers/' + user.uid).set({
+                  name: user.email.split('@')[0],
+                  email: user.email,
+                  uid: user.uid
+                });
+              }
+              // Jika Admin, masukkan ke database admins
+              if (roleName === "Admin") {
+                firebase.database().ref('admins/' + user.uid).set({
+                  name: user.email.split('@')[0],
+                  email: user.email,
+                  uid: user.uid
+                });
+              }
+
+              showLoadingPopup("Membuat akun, mengalihkan...");
+              setTimeout(function() {
+                if (roleName === "Admin") {
+                  localStorage.setItem('adminEmail', user.email);
+                  window.location.href = 'admin.html';
+                } else {
+                  window.location.href = 'gurudashboard.html';
+                }
+              }, 1200);
             })
             .catch((error) => {
-              const errorCode = error.code;
               const errorMessage = error.message;
-              console.error('Sign-up failed:', errorCode, errorMessage);  // Debugging log
-              alert('Sign-up failed: ' + errorMessage);  // Show Firebase error
+              alert('Sign up gagal: ' + errorMessage);
             });
         } else {
-          // Sign-in process for Guru/Admin
+          // === SIGN IN GURU/ADMIN ===
           firebase.auth().signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
               const user = userCredential.user;
-              console.log('Login successful', user);  // Debugging log
-              localStorage.setItem('username', user.email);  // Store the logged-in user's email for future use
-              window.location.href = 'gurudashboard.html';  // Redirect to Guru Dashboard
+              localStorage.setItem('username', user.email);
+
+              // Jika Guru, cek & tambahkan ke teachers jika belum ada
+              if (roleName === "Guru") {
+                firebase.database().ref('teachers/' + user.uid).once('value').then(snapshot => {
+                  if (!snapshot.exists()) {
+                    firebase.database().ref('teachers/' + user.uid).set({
+                      name: user.email.split('@')[0],
+                      email: user.email,
+                      uid: user.uid
+                    });
+                  }
+                });
+              }
+              // Jika Admin, cek & tambahkan ke admins jika belum ada
+              if (roleName === "Admin") {
+                firebase.database().ref('admins/' + user.uid).once('value').then(snapshot => {
+                  if (!snapshot.exists()) {
+                    firebase.database().ref('admins/' + user.uid).set({
+                      name: user.email.split('@')[0],
+                      email: user.email,
+                      uid: user.uid
+                    });
+                  }
+                });
+              }
+
+              showLoadingPopup("Login berhasil, mengalihkan...");
+              setTimeout(function() {
+                if (roleName === "Admin") {
+                  localStorage.setItem('adminEmail', user.email);
+                  window.location.href = 'admin.html';
+                } else {
+                  window.location.href = 'gurudashboard.html';
+                }
+              }, 1200);
             })
             .catch((error) => {
-              const errorCode = error.code;
               const errorMessage = error.message;
-              console.error('Login failed:', errorCode, errorMessage);  // Debugging log
-              alert('Login failed: ' + errorMessage);  // Show Firebase login error
+              alert('Login gagal: ' + errorMessage);
             });
         }
       } else if (roleName === 'Siswa / Orang Tua') {
-        // Handle login for Siswa / Orang Tua: Check if NISN exists in the database
-        const databaseRef = firebase.database().ref('students'); // reference to your students node
+        // === LOGIN SISWA/ORANG TUA DENGAN NISN ===
+        const databaseRef = firebase.database().ref('students');
         const studentRef = databaseRef.orderByChild('nisn').equalTo(nisn);
 
         studentRef.once('value').then(snapshot => {
           if (snapshot.exists()) {
-            // NISN found in the database, proceed to the siswa/orangtua page
-            window.location.href = 'siswa_orangtua.html';  // Redirect to siswa/orangtua page
+            showLoadingPopup("Login berhasil, mengalihkan...");
+            setTimeout(function() {
+              window.location.href = 'siswa_orangtua.html';
+            }, 1200);
           } else {
-            // NISN not found, show error message
             alert("NISN tidak terdaftar, silahkan hubungi guru BK anda");
           }
         }).catch(error => {
-          console.error("Error checking NISN:", error);
-          alert("Error checking NISN. Please try again later.");
+          alert("Terjadi error saat cek NISN. Silakan coba lagi.");
         });
       }
     };
   }
-</script>
 
+  function handleLogout(event) {
+    event.preventDefault();
+    showLoadingPopup("Sedang logout...");
+    firebase.auth().signOut().then(function() {
+      setTimeout(function() {
+        window.location.href = "index.html";
+      }, 900);
+    }).catch(function(error) {
+      hideLoadingPopup();
+      alert("Logout gagal!");
+    });
+  }
+</script>
+<div id="loadingPopup" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.65); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:32px 44px; border-radius:16px; box-shadow:0 6px 32px #0002; font-size:1.3em; color:#2a2a2a;">
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="loader"></div>
+      <div id="loadingText" style="margin-top:14px;">Loading...</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

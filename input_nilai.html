@@ -8,11 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for graphs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="firebase.js"></script>
   <!-- Include XLSX Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
-  <!-- Engaging Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!---Link Font-->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -36,7 +37,7 @@
             <img src="https://img.icons8.com/?size=100&id=151IAtg8gTZE&format=png&color=000000" alt="Account Icon" class="nav-icon">
             <span id="loggedInUser">guru1</span> 
           </div>
-          <a href="logout.html" class="nav-link logout">
+          <a href="#" class="nav-link logout" onclick="handleLogout(event)">
             <img src="https://img.icons8.com/?size=100&id=13925&format=png&color=000000" alt="Logout Icon" class="nav-icon"> Logout
           </a>
         </div>    
@@ -60,6 +61,7 @@
             <th>Biologi</th>
             <th>Kimia</th>
             <th>Olahraga</th>
+            <th>Informatika</th>
             <th>PKN</th>
             <th>Geografi</th>
             <th>Sejarah</th>
@@ -121,72 +123,96 @@
   </div>
 
   <script>
-    // Fetch data from Firebase and populate the table
-    window.onload = function () {
-      const username = localStorage.getItem('username');
-      
-      if (!username) {
-        window.location.href = "index.html";  // Redirect to login page if not logged in
-      } else {
-        document.getElementById("loggedInUser").innerText = username;
-      }
-
-      const studentRef = firebase.database().ref('students');
-      studentRef.once('value').then(snapshot => {
-        const data = snapshot.val();
-        const tableBody = document.getElementById('dataTableBody');
-         const psikotesTableBody = document.getElementById('psikotesTableBody');
-
-        let rowNumber = 1;
-
-        for (const nisn in data) {
-          const student = data[nisn];
-          const row = document.createElement('tr');
-
-           row.innerHTML = `
-            <td>${rowNumber}</td>
-            <td>${nisn}</td>
-            <td>${student.name}</td>
-            <td>${student.subjects.bahasaIndo}</td>
-            <td>${student.subjects.bahasaInggris}</td>
-            <td>${student.subjects.matematika}</td>
-            <td>${student.subjects.fisika}</td>
-            <td>${student.subjects.biologi}</td>
-            <td>${student.subjects.kimia}</td>
-            <td>${student.subjects.olahraga}</td>
-            <td>${student.subjects.PKN}</td>
-            <td>${student.subjects.geografi}</td>
-            <td>${student.subjects.sejarah}</td>
-            <td>Tunggu Pilihan</td> <!-- Default result, can be updated later -->
-          `;
-          
-          tableBody.appendChild(row);
-
-          const psikotesRow = document.createElement('tr');
-          psikotesRow.innerHTML = `
-            <td>${rowNumber}</td>
-            <td>${nisn}</td>
-            <td>${student.name}</td>
-            <td>${student.psikotes.kecerdasanUmum}</td>
-            <td>${student.psikotes.spatialReasoning}</td>
-            <td>${student.psikotes.mechanicalReasoning}</td>
-            <td>${student.psikotes.penalaranAbstrak}</td>
-            <td>${student.psikotes.pemahamanVerbal}</td>
-            <td>${student.psikotes.numerikal}</td>
-            <td>${student.psikotes.logika}</td>
-          `;
-          
-          psikotesTableBody.appendChild(psikotesRow);
-
-          rowNumber++;
-        }
-      
-      }).catch(error => {
-        console.error('Error fetching data:', error);
-        alert('Failed to fetch data');
-      });
+    function showLoadingPopup(text = "Loading...") {
+      document.getElementById('loadingText').innerText = text;
+      document.getElementById('loadingPopup').style.display = 'flex';
+    }
+    function hideLoadingPopup() {
+      document.getElementById('loadingPopup').style.display = 'none';
     }
 
+    // Fetch data from Firebase and populate the table
+    window.onload = function () {
+  const username = localStorage.getItem('username');
+  
+  if (!username) {
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("loggedInUser").innerText = username.split("@")[0];
+  }
+
+  const studentRef = firebase.database().ref('students');
+  const rekomRef = firebase.database().ref('hasil_rekomendasi');
+
+  // Ambil data siswa
+  studentRef.once('value').then(snapshot => {
+    const data = snapshot.val();
+    const tableBody = document.getElementById('dataTableBody');
+    const psikotesTableBody = document.getElementById('psikotesTableBody');
+
+    // Ambil hasil rekomendasi
+    rekomRef.once('value').then(rekomSnap => {
+      const hasilRekom = rekomSnap.val() || {};
+
+      let rowNumber = 1;
+
+      for (const nisn in data) {
+        const student = data[nisn];
+
+        // Ambil hasil rekomendasi dari hasil_rekomendasi, jika ada
+        let result = "-";
+        if (
+          hasilRekom[nisn] &&
+          hasilRekom[nisn].final_recommended
+        ) {
+          result = hasilRekom[nisn].final_recommended;
+        }
+
+        // Akademik
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${rowNumber}</td>
+          <td>${nisn}</td>
+          <td>${student.name ?? '-'}</td>
+          <td>${student.akademik?.bahasaIndo ?? '-'}</td>
+          <td>${student.akademik?.bahasaInggris ?? '-'}</td>
+          <td>${student.akademik?.matematika ?? '-'}</td>
+          <td>${student.akademik?.fisika ?? '-'}</td>
+          <td>${student.akademik?.biologi ?? '-'}</td>
+          <td>${student.akademik?.kimia ?? '-'}</td>
+          <td>${student.akademik?.olahraga ?? '-'}</td>
+          <td>${student.akademik?.Informatika ?? '-'}</td>
+          <td>${student.akademik?.PKN ?? '-'}</td>
+          <td>${student.akademik?.geografi ?? '-'}</td>
+          <td>${student.akademik?.sejarah ?? '-'}</td>
+          <td>${result}</td>
+        `;
+        tableBody.appendChild(row);
+
+        // Psikotes
+        const psikotesRow = document.createElement('tr');
+        psikotesRow.innerHTML = `
+          <td>${rowNumber}</td>
+          <td>${nisn}</td>
+          <td>${student.name ?? '-'}</td>
+          <td>${student.psikotes?.kecerdasanUmum ?? '-'}</td>
+          <td>${student.psikotes?.spatialReasoning ?? '-'}</td>
+          <td>${student.psikotes?.mechanicalReasoning ?? '-'}</td>
+          <td>${student.psikotes?.penalaranAbstrak ?? '-'}</td>
+          <td>${student.psikotes?.pemahamanVerbal ?? '-'}</td>
+          <td>${student.psikotes?.numerikal ?? '-'}</td>
+          <td>${student.psikotes?.logika ?? '-'}</td>
+        `;
+        psikotesTableBody.appendChild(psikotesRow);
+
+        rowNumber++;
+      }
+    });
+  }).catch(error => {
+    console.error('Error fetching data:', error);
+    alert('Failed to fetch data');
+  });
+}
     // Function to generate Excel file from both tables
     function generateExcel() {
       // Get the tables
@@ -207,7 +233,37 @@
       // Save the Excel file
       XLSX.writeFile(workbook, "input_nilai_data.xlsx");
     }
+    function handleLogout(event) {
+      event.preventDefault();
+      showLoadingPopup("Sedang logout...");
+      firebase.auth().signOut()
+        .then(function() {
+          setTimeout(function() {
+            window.location.href = "index.html";
+          }, 900);
+        })
+        .catch(function(error) {
+          hideLoadingPopup();
+          alert("Logout gagal! Silakan coba lagi.");
+          console.error(error);
+        });
+    }
 
-  </script>
+</script>
+  <!-- POPUP LOADING -->
+  <div id="loadingPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.13); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; box-shadow:0 4px 24px #23A6F030; padding:32px 38px; display:flex; flex-direction:column; align-items:center;">
+      <div class="spinner" style="margin-bottom:18px; width:46px; height:46px;">
+        <svg width="46" height="46" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke="#23A6F0" stroke-width="6" stroke-linecap="round" stroke-dasharray="100,60">
+            <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.85s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <div id="loadingText" style="font-size:1.13rem; color:#2b426b; font-weight:500; letter-spacing:0.5px;">
+        Loading...
+      </div>
+    </div>
+  </div>
 </body>
 </html>
