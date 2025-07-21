@@ -107,6 +107,10 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
   min-height: 190px;
   text-align: center;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   transition: transform 0.22s, box-shadow 0.22s;
   border: 2px solid #fff;
 }

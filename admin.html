@@ -214,21 +214,21 @@
             </thead>
             <tbody>
       `;
-      for (const nisn in students) {
+        for (const nisn in students) {
         const s = students[nisn];
         table += `
-          <tr>
+            <tr>
             <td>${nisn}</td>
             <td>${s.name || '-'}</td>
             <td>${s.email || '-'}</td>
             <td>
-              <button onclick="editStudent('${nisn}')">Edit</button>
-              <button onclick="deleteStudent('${nisn}')">Hapus</button>
+                <button onclick="editStudent('${nisn}')">Edit</button>
+                <button onclick="deleteStudent('${nisn}')">Hapus</button>
+                <button onclick="sendResetPassword('${s.email || ''}')">Reset Password</button>
             </td>
-          </tr>
+            </tr>
         `;
-      }
-      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
+        }
       showPopup(table);
     });
   }
@@ -251,21 +251,21 @@
             </thead>
             <tbody>
       `;
-      for (const id in teachers) {
+        for (const id in teachers) {
         const t = teachers[id];
         table += `
-          <tr>
+            <tr>
             <td>${id}</td>
             <td>${t.name || '-'}</td>
             <td>${t.email || '-'}</td>
             <td>
-              <button onclick="editTeacher('${id}')">Edit</button>
-              <button onclick="deleteTeacher('${id}')">Hapus</button>
+                <button onclick="editTeacher('${id}')">Edit</button>
+                <button onclick="deleteTeacher('${id}')">Hapus</button>
+                <button onclick="sendResetPassword('${t.email || ''}')">Reset Password</button>
             </td>
-          </tr>
+            </tr>
         `;
-      }
-      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
+        }
       showPopup(table);
     });
   }
@@ -294,10 +294,12 @@
             <td>${id}</td>
             <td>${a.name || '-'}</td>
             <td>${a.email || '-'}</td>
+            <td>
+                <button onclick="sendResetPassword('${a.email || ''}')">Reset Password</button>
+            </td>
           </tr>
         `;
       }
-      table += `</tbody></table><button onclick="closeTablePopup()" style="margin-top:15px;">Tutup</button></div>`;
       showPopup(table);
     });
   }
@@ -501,6 +503,26 @@
           console.error(error);
         });
     }
+    window.sendResetPassword = function(email) {
+    if (!email) {
+        alert('User tidak memiliki email terdaftar!');
+        return;
+    }
+    if (!confirm('Kirim link reset password ke email ' + email + '?')) return;
+    showLoadingPopup('Mengirim email reset password...');
+    firebase.auth().sendPasswordResetEmail(email)
+        .then(function() {
+        hideLoadingPopup();
+        alert('Link reset password sudah dikirim ke ' + email);
+        logActivity(`${username.split('@')[0]} mengirim reset password ke user ${email}`);
+        })
+        .catch(function(error) {
+        hideLoadingPopup();
+        alert('Gagal mengirim email reset password: ' + error.message);
+        console.error(error);
+        });
+    }
+
 </script>
     <!-- POPUP LOADING -->
     <div id="loadingPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.13); z-index:9999; align-items:center; justify-content:center;">
