@@ -9,6 +9,10 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <!-- jsPDF & autoTable CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
+
   <script src="firebase.js"></script>
   <!-- Include XLSX Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
@@ -22,8 +26,8 @@
     <!-- Header Section -->
     <header>
         <div class="header-content">
-          <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
-          <h1>SMA Mutiara 17 Agustus</h1>
+        <img src="logo-sma-mutiara.png" alt="Logo SMA Mutiara" class="sma-logo-header">
+          <h1>SMA Mutiara 17 Agustus Bekasi</h1>
         </div>
 
         <div class="header-nav">
@@ -65,7 +69,7 @@
             <th>PKN</th>
             <th>Geografi</th>
             <th>Sejarah</th>
-            <th>Result</th> <!-- Add Result Column -->
+            <th>Pilihan Siswa</th> <!-- Add Result Column -->
           </tr>
         </thead>
         <tbody id="dataTableBody">
@@ -94,8 +98,27 @@
           <!-- Data rows will be inserted dynamically here -->
         </tbody>
       </table>
+      <h3 style="margin-top: 40px;">Daftar Pilihan Rekomendasi Jurusan Siswa</h3>
+      <table id="pilihanRekomendasiTable" border="1" cellspacing="0" cellpadding="4">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>NISN</th>
+            <th>Pilihan Jurusan 1</th>
+            <th>Pilihan Jurusan 2</th>
+            <th>Pilihan Jurusan 3</th>
+            <th>Pilihan Siswa</th>
+            <th>Tanda Tangan Guru</th>
+          </tr>
+        </thead>
+        <tbody id="pilihanRekomendasiTableBody">
+          <!-- Dynamic -->
+        </tbody>
+      </table>
+      <button class="generate-btn" style="margin-top:16px;" onclick="generateRekomPDF()">Export Rekomendasi PDF</button>
+    <!-- Button to Generate Excel File -->
     </div>
-
     <!-- Button to Generate Excel File -->
     <button class="generate-btn" onclick="generateExcel()">Generate Excel</button>
 
@@ -115,7 +138,7 @@
         </div>
         <div class="alamat">
           <h3>Alamat</h3>
-          <p>Jl. Kemerdekaan No. 17, Jakarta Pusat</p>
+          <p>JL. Raya Taman Wisma Asri Kav.7</p>
         </div>
       </div>
       <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
@@ -133,86 +156,249 @@
 
     // Fetch data from Firebase and populate the table
     window.onload = function () {
-  const username = localStorage.getItem('username');
-  
-  if (!username) {
-    window.location.href = "index.html";
-  } else {
-    document.getElementById("loggedInUser").innerText = username.split("@")[0];
-  }
+      const username = localStorage.getItem('username');
+      if (!username) {
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("loggedInUser").innerText = username.split("@")[0];
+      }
 
-  const studentRef = firebase.database().ref('students');
-  const rekomRef = firebase.database().ref('hasil_rekomendasi');
+      const studentRef = firebase.database().ref('students');
+      const rekomRef = firebase.database().ref('hasil_rekomendasi');
 
-  // Ambil data siswa
-  studentRef.once('value').then(snapshot => {
-    const data = snapshot.val();
-    const tableBody = document.getElementById('dataTableBody');
-    const psikotesTableBody = document.getElementById('psikotesTableBody');
+      // Ambil data siswa
+      studentRef.once('value').then(snapshot => {
+        const data = snapshot.val();
+        const tableBody = document.getElementById('dataTableBody');
+        const psikotesTableBody = document.getElementById('psikotesTableBody');
 
-    // Ambil hasil rekomendasi
-    rekomRef.once('value').then(rekomSnap => {
-      const hasilRekom = rekomSnap.val() || {};
+        // Ambil hasil rekomendasi
+        rekomRef.once('value').then(rekomSnap => {
+          const hasilRekom = rekomSnap.val() || {};
+          let rowNumber = 1;
 
-      let rowNumber = 1;
+          for (const nisn in data) {
+            const student = data[nisn];
 
+            // Ambil hasil rekomendasi dari hasil_rekomendasi, jika ada
+            let result = "-";
+            if (
+              hasilRekom[nisn] &&
+              hasilRekom[nisn].final_recommended
+            ) {
+              result = hasilRekom[nisn].final_recommended;
+            }
+
+            // Akademik
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${rowNumber}</td>
+              <td>${nisn}</td>
+              <td>${student.name ?? '-'}</td>
+              <td>${student.akademik?.bahasaIndo ?? '-'}</td>
+              <td>${student.akademik?.bahasaInggris ?? '-'}</td>
+              <td>${student.akademik?.matematika ?? '-'}</td>
+              <td>${student.akademik?.fisika ?? '-'}</td>
+              <td>${student.akademik?.biologi ?? '-'}</td>
+              <td>${student.akademik?.kimia ?? '-'}</td>
+              <td>${student.akademik?.olahraga ?? '-'}</td>
+              <td>${student.akademik?.Informatika ?? '-'}</td>
+              <td>${student.akademik?.PKN ?? '-'}</td>
+              <td>${student.akademik?.geografi ?? '-'}</td>
+              <td>${student.akademik?.sejarah ?? '-'}</td>
+              <td>${result}</td>
+            `;
+            tableBody.appendChild(row);
+
+            // Psikotes
+            const psikotesRow = document.createElement('tr');
+            psikotesRow.innerHTML = `
+              <td>${rowNumber}</td>
+              <td>${nisn}</td>
+              <td>${student.name ?? '-'}</td>
+              <td>${student.psikotes?.kecerdasanUmum ?? '-'}</td>
+              <td>${student.psikotes?.spatialReasoning ?? '-'}</td>
+              <td>${student.psikotes?.mechanicalReasoning ?? '-'}</td>
+              <td>${student.psikotes?.penalaranAbstrak ?? '-'}</td>
+              <td>${student.psikotes?.pemahamanVerbal ?? '-'}</td>
+              <td>${student.psikotes?.numerikal ?? '-'}</td>
+              <td>${student.psikotes?.logika ?? '-'}</td>
+            `;
+            psikotesTableBody.appendChild(psikotesRow);
+
+            rowNumber++;
+          }
+
+          // Tambahan: Render Tabel Pilihan Rekomendasi Jurusan Siswa
+          renderPilihanRekomendasiTable(data, hasilRekom);
+        });
+      }).catch(error => {
+        console.error('Error fetching data:', error);
+        alert('Failed to fetch data');
+      });
+    }
+
+    // TABEL PILIHAN REKOMENDASI JURUSAN SISWA
+    function renderPilihanRekomendasiTable(data, hasilRekom) {
+      const pilihanTableBody = document.getElementById('pilihanRekomendasiTableBody');
+      pilihanTableBody.innerHTML = "";
+      let nomor = 1;
       for (const nisn in data) {
         const student = data[nisn];
-
-        // Ambil hasil rekomendasi dari hasil_rekomendasi, jika ada
-        let result = "-";
-        if (
-          hasilRekom[nisn] &&
-          hasilRekom[nisn].final_recommended
-        ) {
-          result = hasilRekom[nisn].final_recommended;
-        }
-
-        // Akademik
+        const hasil = hasilRekom[nisn] || {};
+        const pilihan = hasil.pilihan || {};
+        const pilihanSiswa = hasil.final_recommended || "-";
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${rowNumber}</td>
-          <td>${nisn}</td>
+          <td>${nomor}</td>
           <td>${student.name ?? '-'}</td>
-          <td>${student.akademik?.bahasaIndo ?? '-'}</td>
-          <td>${student.akademik?.bahasaInggris ?? '-'}</td>
-          <td>${student.akademik?.matematika ?? '-'}</td>
-          <td>${student.akademik?.fisika ?? '-'}</td>
-          <td>${student.akademik?.biologi ?? '-'}</td>
-          <td>${student.akademik?.kimia ?? '-'}</td>
-          <td>${student.akademik?.olahraga ?? '-'}</td>
-          <td>${student.akademik?.Informatika ?? '-'}</td>
-          <td>${student.akademik?.PKN ?? '-'}</td>
-          <td>${student.akademik?.geografi ?? '-'}</td>
-          <td>${student.akademik?.sejarah ?? '-'}</td>
-          <td>${result}</td>
-        `;
-        tableBody.appendChild(row);
-
-        // Psikotes
-        const psikotesRow = document.createElement('tr');
-        psikotesRow.innerHTML = `
-          <td>${rowNumber}</td>
           <td>${nisn}</td>
-          <td>${student.name ?? '-'}</td>
-          <td>${student.psikotes?.kecerdasanUmum ?? '-'}</td>
-          <td>${student.psikotes?.spatialReasoning ?? '-'}</td>
-          <td>${student.psikotes?.mechanicalReasoning ?? '-'}</td>
-          <td>${student.psikotes?.penalaranAbstrak ?? '-'}</td>
-          <td>${student.psikotes?.pemahamanVerbal ?? '-'}</td>
-          <td>${student.psikotes?.numerikal ?? '-'}</td>
-          <td>${student.psikotes?.logika ?? '-'}</td>
+          <td>${pilihan.pilihan1 || '-'}</td>
+          <td>${pilihan.pilihan2 || '-'}</td>
+          <td>${pilihan.pilihan3 || '-'}</td>
+          <td>${pilihanSiswa}</td>
+          <td></td>
         `;
-        psikotesTableBody.appendChild(psikotesRow);
-
-        rowNumber++;
+        pilihanTableBody.appendChild(row);
+        nomor++;
       }
-    });
-  }).catch(error => {
-    console.error('Error fetching data:', error);
-    alert('Failed to fetch data');
-  });
-}
+    }
+    function generateRekomPDF() {
+      const { jsPDF } = window.jspdf;
+      var doc = new jsPDF('landscape', 'pt', 'A4');
+      var img = new Image();
+      img.src = "logo-sma-mutiara.png";
+
+      // Ambil data dari Firebase
+      const studentRef = firebase.database().ref('students');
+      const rekomRef = firebase.database().ref('hasil_rekomendasi');
+
+      Promise.all([
+        studentRef.once('value'),
+        rekomRef.once('value')
+      ]).then(([studentSnap, rekomSnap]) => {
+        const data = studentSnap.val() || {};
+        const hasilRekom = rekomSnap.val() || {};
+        let nomor = 1;
+
+        // Build Kolom
+        const columns = [
+          { header: "No", dataKey: "no" },
+          { header: "NISN", dataKey: "nisn" },
+          { header: "Nama", dataKey: "nama" },
+          { header: "Bhs Indo", dataKey: "bindo" },
+          { header: "Bhs Ing", dataKey: "bing" },
+          { header: "Mat", dataKey: "mtk" },
+          { header: "Fis", dataKey: "fis" },
+          { header: "Bio", dataKey: "bio" },
+          { header: "Kim", dataKey: "kim" },
+          { header: "Olga", dataKey: "olga" },
+          { header: "TI", dataKey: "TI" },
+          { header: "PKN", dataKey: "pkn" },
+          { header: "Geo", dataKey: "geo" },
+          { header: "Sej", dataKey: "sej" },
+          { header: "IQ", dataKey: "iq" },
+          { header: "Spatial", dataKey: "spatial" },
+          { header: "Mechanical", dataKey: "mechanical" },
+          { header: "Abstrak", dataKey: "abstrak" },
+          { header: "Verbal", dataKey: "verbal" },
+          { header: "Numerik", dataKey: "numerik" },
+          { header: "Logika", dataKey: "logika" },
+          { header: "Pil 1", dataKey: "p1" },
+          { header: "Pil 2", dataKey: "p2" },
+          { header: "Pil 3", dataKey: "p3" },
+          { header: "Pilihan Siswa", dataKey: "psiswa" },
+          { header: "Tanda Tangan Guru", dataKey: "ttd" }
+        ];
+
+        // Gabungkan data
+        let mergedData = [];
+        for (const nisn in data) {
+          const student = data[nisn] || {};
+          const akademik = student.akademik || {};
+          const psikotes = student.psikotes || {};
+          const hasil = hasilRekom[nisn] || {};
+          const pilihan = hasil.pilihan || {};
+          const pilihanSiswa = hasil.final_recommended || "-";
+          mergedData.push({
+            no: nomor++,
+            nisn: nisn,
+            nama: student.name ?? '-',
+            bindo: akademik.bahasaIndo ?? '-',
+            bing: akademik.bahasaInggris ?? '-',
+            mtk: akademik.matematika ?? '-',
+            fis: akademik.fisika ?? '-',
+            bio: akademik.biologi ?? '-',
+            kim: akademik.kimia ?? '-',
+            olga: akademik.olahraga ?? '-',
+            TI: akademik.Informatika ?? '-',
+            pkn: akademik.PKN ?? '-',
+            geo: akademik.geografi ?? '-',
+            sej: akademik.sejarah ?? '-',
+            iq: psikotes.kecerdasanUmum ?? '-',
+            spatial: psikotes.spatialReasoning ?? '-',
+            mechanical: psikotes.mechanicalReasoning ?? '-',
+            abstrak: psikotes.penalaranAbstrak ?? '-',
+            verbal: psikotes.pemahamanVerbal ?? '-',
+            numerik: psikotes.numerikal ?? '-',
+            logika: psikotes.logika ?? '-',
+            p1: pilihan.pilihan1 || '-',
+            p2: pilihan.pilihan2 || '-',
+            p3: pilihan.pilihan3 || '-',
+            psiswa: pilihanSiswa,
+            ttd: ""
+          });
+        }
+
+        // Tunggu logo load
+        img.onload = function() {
+          // Header & Logo
+          doc.addImage(img, 'PNG', 35, 28, 48, 48);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(24);
+          doc.text("Hasil Rekomendasi Siswa", 100, 54);
+          doc.setFontSize(14);
+          doc.text("SMA Mutiara 17 Agustus", 100, 75);
+
+          doc.autoTable({
+            columns: columns,
+            body: mergedData,
+            startY: 90,
+            theme: 'grid',
+            headStyles: {
+              fillColor: [34, 87, 167],
+              fontSize: 6,
+              halign: 'center',
+              valign: 'middle'
+            },
+            styles: {
+              font: 'helvetica',
+              fontSize: 5.2,
+              halign: 'center',
+              overflow: 'linebreak'
+            },
+            margin: { left: 0, right: 0 },
+            tableWidth: 'auto',
+            // scaling jika kepanjangan
+            didDrawPage: function (data) {
+              var pageWidth = doc.internal.pageSize.getWidth();
+              var tableWidth = data.table.width;
+              if (tableWidth > pageWidth) {
+                var scale = pageWidth / tableWidth;
+                doc.internal.scaleFactor = scale;
+              }
+            }
+          });
+
+          doc.save('hasil_rekomendasi_siswa.pdf');
+        };
+
+        // Jika logo sudah ke-cache
+        if (img.complete) img.onload();
+      });
+    }
+
+
     // Function to generate Excel file from both tables
     function generateExcel() {
       // Get the tables
@@ -233,6 +419,7 @@
       // Save the Excel file
       XLSX.writeFile(workbook, "input_nilai_data.xlsx");
     }
+
     function handleLogout(event) {
       event.preventDefault();
       showLoadingPopup("Sedang logout...");
@@ -247,9 +434,8 @@
           alert("Logout gagal! Silakan coba lagi.");
           console.error(error);
         });
-    }
-
-</script>
+      }
+  </script>
   <!-- POPUP LOADING -->
   <div id="loadingPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.13); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:18px; box-shadow:0 4px 24px #23A6F030; padding:32px 38px; display:flex; flex-direction:column; align-items:center;">

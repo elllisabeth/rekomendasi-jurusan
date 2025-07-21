@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Dashboard - SMA Mutiara 17 Agustus</title>
+  <title>Student Dashboard - SMA Mutiara 17 Agustus Bekasi</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,12 +11,14 @@
   <script src="firebase.js"></script>
     <!---Link Font-->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo-sma-mutiara.png" />
 </head>
 <body>
+<div class="container">
     <header>
         <div class="header-content">
-          <img src="https://img.icons8.com/?size=100&id=NZ8gfptCRV7Z&format=png&color=000000" alt="SMA Mutiara Logo">
-          <h1>SMA Mutiara 17 Agustus</h1>
+        <img src="logo-sma-mutiara.png" alt="Logo SMA Mutiara" class="sma-logo-header">
+          <h1>SMA Mutiara 17 Agustus Bekasi</h1>
         </div>
         <div class="header-nav">
           <a href="siswa_orangtua.html" class="nav-link">
@@ -31,7 +33,6 @@
           </a>
         </div>    
     </header>
-  <div class="student-dashboard-container">
     <h2 class="dashboard-title">Dashboard Siswa</h2>
     <div class="nisn-form-row">
         <input type="text" id="nisnInput" placeholder="Masukkan NISN" />
@@ -127,7 +128,7 @@
       </div>
       <div class="final-recommendation" id="finalRecommendationBox">
         <img 
-          src="https://img.icons8.com/?size=100&id=obXHlrikUIMK&format=png&color=000000"
+          src="https://img.icons8.com/?size=100&id=tOFVzlPLWRhK&format=png&color=000000"
           alt="Trophy Icon"
           class="trophy-icon-final"
         />
@@ -136,22 +137,44 @@
         <button id="btnSaveRecommendation" style="margin-top:22px; display:none;">Simpan Rekomendasi</button>
       </div>
     </div>
-  </div>
-
-<!-- POPUP NILAI -->
-<div class="popup-nilai" id="nilaiPopup">
-  <div class="popup-nilai-content">
-    <button class="popup-nilai-close" onclick="closePopup()">×</button>
-    <h2>Nilai Akademik dan Psikotes</h2>
-    <div class="popup-nilai-section">
-      <h3>Nilai Akademik</h3>
-      <ul class="popup-nilai-list" id="nilaiAkademikList"></ul>
+  <!-- POPUP NILAI -->
+  <div class="popup-nilai" id="nilaiPopup" style="display:none;">
+    <div class="popup-nilai-content">
+      <button class="popup-nilai-close" onclick="closePopup()">×</button>
+      <h2>Nilai Akademik dan Psikotes</h2>
+      <div class="popup-nilai-section">
+        <h3>Nilai Akademik</h3>
+        <ul class="popup-nilai-list" id="nilaiAkademikList">
+          <!-- Akan diisi otomatis oleh JS -->
+        </ul>
+      </div>
+      <div class="popup-nilai-section">
+        <h3>Nilai Psikotes</h3>
+        <ul class="popup-nilai-list" id="nilaiPsikotesList">
+          <!-- Akan diisi otomatis oleh JS -->
+        </ul>
+      </div>
     </div>
-    <div class="popup-nilai-section">
-      <h3>Nilai Psikotes</h3>
-      <ul class="popup-nilai-list" id="nilaiPsikotesList"></ul>
-    </div>
   </div>
+    <!-- Footer Section -->
+  <footer>
+    <div class="footer-content">
+      <div>
+        <h3>SMA Mutiara 17 Agustus</h3>
+        <p>Sistem Rekomendasi Jurusan untuk membantu siswa memilih jalur pendidikan yang tepat.</p>
+      </div>
+      <div class="contact">
+        <h3>Kontak</h3>
+        <p>Email: info@smamutiara17.sch.id</p>
+        <p>Telepon: (021) 1234-5678</p>
+      </div>
+      <div class="alamat">
+        <h3>Alamat</h3>
+        <p>JL. Raya Taman Wisma Asri Kav.7</p>
+      </div>
+    </div>
+    <p>&copy; 2025 SMA Mutiara 17 Agustus. All rights reserved.</p>
+  </footer>
 </div>
 <script>
 // Cek & tampilkan username/email di header, redirect jika belum login
@@ -280,26 +303,44 @@ function fetchStudentData() {
   });
 }
 
-// ====== POPUP NILAI ======
-function openPopup() {
-  // Render list akademik & psikotes ke popup-nilai
-  const akd = window._academicData || {};
-  const psik = window._psikotesDataRaw || {};
-  let listA = Object.entries(akd)
-    .map(([key, val]) => `<li>${ucwords(key)} <span>${Number(val).toFixed(2)}</span></li>`).join('');
-  let listP = Object.entries(psik)
-    .map(([key, val]) => `<li>${ucwords(key)} <span>${val}</span></li>`).join('');
-  document.getElementById('nilaiAkademikList').innerHTML = listA;
-  document.getElementById('nilaiPsikotesList').innerHTML = listP;
-  document.getElementById('nilaiPopup').style.display = 'flex';
-}
-function closePopup() {
+// ====== POPUP NILAI ======s
+  function openPopup() {
+    // Mapping nama kelompok ke array subjek
+    const kelompokReadable = {
+      bahasa:      ['Bahasa Indonesia', 'Bahasa Inggris'],
+      logika:      ['Matematika', 'Fisika', 'Informatika'],
+      sains:       ['Kimia', 'Biologi'],
+      praktek:     ['Olahraga'],
+      sosial:      ['Sejarah', 'Geografi', 'Ekonomi', 'PKN']
+    };
+    const akd = window._academicData || {};  // sesuaikan jika variabelnya beda
+    const psik = window._psikotesDataRaw || {};
+
+    let listA = '';
+    for (let group in akd) {
+      const label = group.charAt(0).toUpperCase() + group.slice(1);
+      const submapel = kelompokReadable[group]
+        ? `<span class="popup-nilai-detail-mapel">(${kelompokReadable[group].join(', ')})</span>`
+        : '';
+      listA += `<li>
+        <span>${label} ${submapel}</span>
+        <span class="popup-nilai-col">${Number(akd[group]).toFixed(2)}</span>
+      </li>`;
+    }
+    document.getElementById('nilaiAkademikList').innerHTML = listA;
+
+    let listP = Object.entries(psik)
+      .map(([key, val]) => `<li><span>${ucwords(key)}</span><span class="popup-nilai-col">${val}</span></li>`).join('');
+    document.getElementById('nilaiPsikotesList').innerHTML = listP;
+
+    document.getElementById('nilaiPopup').style.display = 'flex';
+  }
+  function ucwords(str) {
+    return (str+'').replace(/^(.)|\s+(.)/g, function ($1) { return $1.toUpperCase(); });
+  }
+
+  function closePopup() {
   document.getElementById('nilaiPopup').style.display = 'none';
-}
-function ucwords(str) {
-  return str.replace(/([A-Z])/g, ' $1')
-    .replace(/^./, s => s.toUpperCase())
-    .replace(/\b\w/g, s => s.toUpperCase());
 }
 
 // ====== GENERATE & OUTPUT RECOMMENDATION ======
@@ -394,6 +435,12 @@ function generateRecommendations() {
   window._recDataForSave = {
     nisn,
     nama: window._studentName,
+    pilihan: {
+      pilihan1: major1,
+      pilihan2: major2,
+      pilihan3: major3
+    },
+    // field lain yang sudah ada di object kamu:
     major_choices: [major1, major2, major3],
     hasil_SAW: hasilSAW,
     hasil_Fuzzy: hasilFuzzy,
@@ -401,8 +448,8 @@ function generateRecommendations() {
     final_recommended: finalMajor,
     time: new Date().toISOString()
   };
-}
 
+}
 // ====== SAVE REKOMENDASI ======
 document.getElementById('btnSaveRecommendation').onclick = function() {
   if (!window._recDataForSave) {
