@@ -69,7 +69,7 @@
             <th>PKN</th>
             <th>Geografi</th>
             <th>Sejarah</th>
-            <th>Pilihan Siswa</th> <!-- Add Result Column -->
+            <th>Rekomendasi</th> <!-- Add Result Column -->
           </tr>
         </thead>
         <tbody id="dataTableBody">
@@ -108,8 +108,7 @@
             <th>Pilihan Jurusan 1</th>
             <th>Pilihan Jurusan 2</th>
             <th>Pilihan Jurusan 3</th>
-            <th>Pilihan Siswa</th>
-            <th>Tanda Tangan Guru</th>
+            <th>Rekomendasi</th> 
           </tr>
         </thead>
         <tbody id="pilihanRekomendasiTableBody">
@@ -154,89 +153,99 @@
       document.getElementById('loadingPopup').style.display = 'none';
     }
 
+  // USER SESSION & LOGOUT
+  const username = localStorage.getItem('username');
+  if (!username) {
+      window.location.href = "index.html";
+  } else {
+      document.getElementById("loggedInUser").innerText = username.split("@")[0];
+  }
+
     // Fetch data from Firebase and populate the table
-    window.onload = function () {
-      const username = localStorage.getItem('username');
-      if (!username) {
-        window.location.href = "index.html";
-      } else {
-        document.getElementById("loggedInUser").innerText = username.split("@")[0];
+window.onload = function () {
+  const studentRef = firebase.database().ref('students');
+  const rekomRef = firebase.database().ref('hasil_rekomendasi');
+
+  studentRef.once('value').then(snapshot => {
+    const data = snapshot.val();
+    const tableBody = document.getElementById('dataTableBody'); // Tabel nilai akademik
+    const rekomTableBody = document.getElementById('pilihanRekomendasiTableBody'); // Tabel rekomendasi
+    const psikotesTableBody = document.getElementById('psikotesTableBody'); // Tabel psikotes
+
+    rekomRef.once('value').then(rekomSnap => {
+      const hasilRekom = rekomSnap.val() || {};
+      let rowNumber = 1;
+
+      // Loop untuk menambahkan data ke tabel
+      for (const nisn in data) {
+        const student = data[nisn];
+        
+        // Pastikan nilai psikotes ada
+        const psikotes = student.psikotes || {};
+        
+        let result = "-";
+        if (hasilRekom[nisn] && hasilRekom[nisn].final_recommended) {
+          result = hasilRekom[nisn].final_recommended;
+        }
+
+        // Membuat baris baru untuk tabel nilai akademik
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${rowNumber}</td>
+          <td>${nisn}</td>
+          <td>${student.name ?? '-'}</td>
+          <td>${student.akademik?.bahasaIndo ?? '-'}</td>
+          <td>${student.akademik?.bahasaInggris ?? '-'}</td>
+          <td>${student.akademik?.matematika ?? '-'}</td>
+          <td>${student.akademik?.fisika ?? '-'}</td>
+          <td>${student.akademik?.biologi ?? '-'}</td>
+          <td>${student.akademik?.kimia ?? '-'}</td>
+          <td>${student.akademik?.olahraga ?? '-'}</td>
+          <td>${student.akademik?.Informatika ?? '-'}</td>
+          <td>${student.akademik?.PKN ?? '-'}</td>
+          <td>${student.akademik?.geografi ?? '-'}</td>
+          <td>${student.akademik?.sejarah ?? '-'}</td>
+          <td>${result}</td> <!-- Kolom Rekomendasi -->
+        `;
+        tableBody.appendChild(row);
+
+        // Membuat baris baru untuk tabel rekomendasi jurusan
+        const rekomRow = document.createElement('tr');
+        rekomRow.innerHTML = `
+          <td>${rowNumber}</td>
+          <td>${student.name ?? '-'}</td>
+          <td>${nisn}</td>
+          <td>${hasilRekom[nisn]?.pilihan?.pilihan1 || '-'}</td>
+          <td>${hasilRekom[nisn]?.pilihan?.pilihan2 || '-'}</td>
+          <td>${hasilRekom[nisn]?.pilihan?.pilihan3 || '-'}</td>
+          <td>${result}</td> <!-- Kolom Rekomendasi -->
+        `;
+        rekomTableBody.appendChild(rekomRow);
+
+        // Membuat baris baru untuk tabel psikotes
+        const psikotesRow = document.createElement('tr');
+        psikotesRow.innerHTML = `
+          <td>${rowNumber}</td>
+          <td>${nisn}</td>
+          <td>${student.name ?? '-'}</td>
+          <td>${psikotes.kecerdasanUmum ?? '-'}</td> <!-- Psikotes IQ -->
+          <td>${psikotes.spatialReasoning ?? '-'}</td> <!-- Psikotes Spatial -->
+          <td>${psikotes.mechanicalReasoning ?? '-'}</td> <!-- Psikotes Mechanical -->
+          <td>${psikotes.penalaranAbstrak ?? '-'}</td> <!-- Psikotes Abstract -->
+          <td>${psikotes.pemahamanVerbal ?? '-'}</td> <!-- Psikotes Verbal -->
+          <td>${psikotes.numerikal ?? '-'}</td> <!-- Psikotes Numerical -->
+          <td>${psikotes.logika ?? '-'}</td> <!-- Psikotes Logic -->
+        `;
+        psikotesTableBody.appendChild(psikotesRow);
+
+        rowNumber++;
       }
-
-      const studentRef = firebase.database().ref('students');
-      const rekomRef = firebase.database().ref('hasil_rekomendasi');
-
-      // Ambil data siswa
-      studentRef.once('value').then(snapshot => {
-        const data = snapshot.val();
-        const tableBody = document.getElementById('dataTableBody');
-        const psikotesTableBody = document.getElementById('psikotesTableBody');
-
-        // Ambil hasil rekomendasi
-        rekomRef.once('value').then(rekomSnap => {
-          const hasilRekom = rekomSnap.val() || {};
-          let rowNumber = 1;
-
-          for (const nisn in data) {
-            const student = data[nisn];
-
-            // Ambil hasil rekomendasi dari hasil_rekomendasi, jika ada
-            let result = "-";
-            if (
-              hasilRekom[nisn] &&
-              hasilRekom[nisn].final_recommended
-            ) {
-              result = hasilRekom[nisn].final_recommended;
-            }
-
-            // Akademik
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${rowNumber}</td>
-              <td>${nisn}</td>
-              <td>${student.name ?? '-'}</td>
-              <td>${student.akademik?.bahasaIndo ?? '-'}</td>
-              <td>${student.akademik?.bahasaInggris ?? '-'}</td>
-              <td>${student.akademik?.matematika ?? '-'}</td>
-              <td>${student.akademik?.fisika ?? '-'}</td>
-              <td>${student.akademik?.biologi ?? '-'}</td>
-              <td>${student.akademik?.kimia ?? '-'}</td>
-              <td>${student.akademik?.olahraga ?? '-'}</td>
-              <td>${student.akademik?.Informatika ?? '-'}</td>
-              <td>${student.akademik?.PKN ?? '-'}</td>
-              <td>${student.akademik?.geografi ?? '-'}</td>
-              <td>${student.akademik?.sejarah ?? '-'}</td>
-              <td>${result}</td>
-            `;
-            tableBody.appendChild(row);
-
-            // Psikotes
-            const psikotesRow = document.createElement('tr');
-            psikotesRow.innerHTML = `
-              <td>${rowNumber}</td>
-              <td>${nisn}</td>
-              <td>${student.name ?? '-'}</td>
-              <td>${student.psikotes?.kecerdasanUmum ?? '-'}</td>
-              <td>${student.psikotes?.spatialReasoning ?? '-'}</td>
-              <td>${student.psikotes?.mechanicalReasoning ?? '-'}</td>
-              <td>${student.psikotes?.penalaranAbstrak ?? '-'}</td>
-              <td>${student.psikotes?.pemahamanVerbal ?? '-'}</td>
-              <td>${student.psikotes?.numerikal ?? '-'}</td>
-              <td>${student.psikotes?.logika ?? '-'}</td>
-            `;
-            psikotesTableBody.appendChild(psikotesRow);
-
-            rowNumber++;
-          }
-
-          // Tambahan: Render Tabel Pilihan Rekomendasi Jurusan Siswa
-          renderPilihanRekomendasiTable(data, hasilRekom);
-        });
-      }).catch(error => {
-        console.error('Error fetching data:', error);
-        alert('Failed to fetch data');
-      });
-    }
+    });
+  }).catch(error => {
+    console.error('Error fetching data:', error);
+    alert('Failed to fetch data');
+  });
+};
 
     // TABEL PILIHAN REKOMENDASI JURUSAN SISWA
     function renderPilihanRekomendasiTable(data, hasilRekom) {
@@ -256,7 +265,7 @@
           <td>${pilihan.pilihan1 || '-'}</td>
           <td>${pilihan.pilihan2 || '-'}</td>
           <td>${pilihan.pilihan3 || '-'}</td>
-          <td>${pilihanSiswa}</td>
+          <td>${Rekomedasi}</td>
           <td></td>
         `;
         pilihanTableBody.appendChild(row);
@@ -307,8 +316,7 @@
           { header: "Pil 1", dataKey: "p1" },
           { header: "Pil 2", dataKey: "p2" },
           { header: "Pil 3", dataKey: "p3" },
-          { header: "Pilihan Siswa", dataKey: "psiswa" },
-          { header: "Tanda Tangan Guru", dataKey: "ttd" }
+          { header: "Rekomendasi", dataKey: "psiswa" },
         ];
 
         // Gabungkan data
@@ -319,7 +327,7 @@
           const psikotes = student.psikotes || {};
           const hasil = hasilRekom[nisn] || {};
           const pilihan = hasil.pilihan || {};
-          const pilihanSiswa = hasil.final_recommended || "-";
+          const Rekomedasi = hasil.final_recommended || "-";
           mergedData.push({
             no: nomor++,
             nisn: nisn,
@@ -345,8 +353,7 @@
             p1: pilihan.pilihan1 || '-',
             p2: pilihan.pilihan2 || '-',
             p3: pilihan.pilihan3 || '-',
-            psiswa: pilihanSiswa,
-            ttd: ""
+            psiswa: Rekomedasi,
           });
         }
 
@@ -358,7 +365,7 @@
           doc.setFontSize(24);
           doc.text("Hasil Rekomendasi Siswa", 100, 54);
           doc.setFontSize(14);
-          doc.text("SMA Mutiara 17 Agustus", 100, 75);
+          doc.text("SMA Mutiara 17 Agustus Bekasi", 100, 75);
 
           doc.autoTable({
             columns: columns,
@@ -379,20 +386,37 @@
             },
             margin: { left: 0, right: 0 },
             tableWidth: 'auto',
-            // scaling jika kepanjangan
-            didDrawPage: function (data) {
-              var pageWidth = doc.internal.pageSize.getWidth();
-              var tableWidth = data.table.width;
-              if (tableWidth > pageWidth) {
-                var scale = pageWidth / tableWidth;
-                doc.internal.scaleFactor = scale;
-              }
-            }
-          });
+            });
+            // Footer with Kota and Date
+            const currentDate = new Date();
+            const dateString = `${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            // Get page width and set a margin
+            const pageWidth = doc.internal.pageSize.width;  // Page width
+            const margin = 20; // Margin from the right edge
 
-          doc.save('hasil_rekomendasi_siswa.pdf');
+            // Calculate right alignment, ensuring the text fits within the page
+            const textWidth = doc.getTextWidth("Bekasi, " + dateString); // Get width of the "Bekasi, [Date]" text
+            const xPosition = pageWidth - textWidth - margin; // Position text within the right margin
+
+            // Align text to the right-bottom
+            doc.text("Bekasi, " + dateString, xPosition, doc.lastAutoTable.finalY + 30);  // Footer with city and date
+
+            // Add vertical space between "Tanda Tangan Guru" and the date
+            const signatureSpace = 100; // Space between date and signature
+
+            // Set font to bold for "Tanda Tangan Guru"
+            doc.setFont("helvetica", "bold");
+            doc.text("Guru BK", xPosition, doc.lastAutoTable.finalY + signatureSpace); // Signature placeholder
+
+            // Draw an underline for "Tanda Tangan Guru"
+            const textWidthSignature = doc.getTextWidth("Guru BK");
+            doc.setLineWidth(0.5);  // Set line width for the underline
+            doc.line(xPosition, doc.lastAutoTable.finalY + signatureSpace + 2, xPosition + textWidthSignature, doc.lastAutoTable.finalY + signatureSpace + 2); // Draw the line
+            
+            doc.save('hasil_rekomendasi_siswa.pdf');
         };
-
         // Jika logo sudah ke-cache
         if (img.complete) img.onload();
       });
