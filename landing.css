@@ -1,6 +1,6 @@
 /* landing.css - hanya dipakai di index.html landing page */
 /* Layout untuk men-center container landing page di tengah layar */
-body, html {
+body {
   min-height: 100vh;
   min-width: 100vw;
   width: 100%;
@@ -22,9 +22,13 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
 .lp-background {
   background: url('gedung_SMA_Mutiara_172.jpg') center center / cover no-repeat fixed !important;
   min-height: 100vh;
+  background-attachment: fixed;
   width: 100vw;
   position: fixed;
-  top: 0; left: 0; z-index: 0;
+  top: 0; 
+  left: 0; 
+  z-index: -1;
+  overflow: hidden;
 }
 
 .lp-overlay {
