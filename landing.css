@@ -76,8 +76,16 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
   width: 64px; height: 64px; margin-bottom: 7px;
 }
 .lp-header h1 {
-  font-size: 1.55rem;
+  font-size: 1rem;
   color: white;
+  margin: 0;
+}
+.lp-header h2 {
+ font-family: 'Montserrat',sans-serif !important;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #3789C4;
+  letter-spacing: 2px;
   margin: 0;
 }
 .lp-header p {
@@ -262,6 +270,10 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
   box-shadow: 0 3px 10px #e3effd66;
   padding: 19px 12px;
   text-align: center;
+  display: flex;         
+  flex-direction: column;  
+  justify-content: center;  
+  align-items: center;  
 }
 .lp-info-card img { 
     width: 32px; 
@@ -316,7 +328,7 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
 .lp-footer-box {
   background: rgba(41, 64, 91, 0.82); /* biru navy gelap, sedikit lebih transparan */
   color: #fff;
-  border-radius: 0 0 34px 34px;
+  border-radius: 30px;
   padding: 26px 52px 20px 52px;
   margin-top: 28px;
   width: 100%;
@@ -330,7 +342,7 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
 }
 
 .lp-footer-title {
-  font-size: 1.4rem;
+  font-size: 1rem;
   font-weight: 700;
   margin-bottom: 6px;
   letter-spacing: 0.6px;
@@ -338,7 +350,7 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
 }
 
 .lp-footer-desc {
-  font-size: 1.08rem;
+  font-size: 0.9rem;
   color: #e0eaf7;
   margin-bottom: 10px;
   text-align: center;
@@ -352,7 +364,7 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
 }
 
 .lp-footer-subtitle {
-  font-size: 1.07rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #ffd966;
   margin-bottom: 3px;

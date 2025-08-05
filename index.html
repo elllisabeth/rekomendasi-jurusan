@@ -10,6 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="firebase.js"></script>
   <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <!-- Khusus landing page -->
   <link rel="stylesheet" href="landing.css">
@@ -22,6 +25,7 @@
     <div class="lp-header">
     <img src="logo-sma-mutiara.png" alt="Logo SMA Mutiara" class="sma-logo-header">
       <h1>SMA Mutiara 17 Agustus Bekasi</h1>
+      <h2>EduPath Finder</h2>
       <p>Sistem Rekomendasi Jurusan yang membantu siswa memilih jalur pendidikan yang tepat berdasarkan nilai akademik dan minat</p>
     </div>
 
@@ -92,7 +96,7 @@
 
     <!-- FOOTER -->
     <div class="lp-footer-box">
-      <div class="lp-footer-title">SMA Mutiara 17 Agustus</div>
+      <div class="lp-footer-title">SMA Mutiara 17 Agustus Bekasi</div>
       <div class="lp-footer-desc">
         Sistem Rekomendasi Jurusan untuk membantu siswa memilih jalur pendidikan yang tepat.
       </div>
@@ -103,15 +107,11 @@
       </div>
       <div class="lp-footer-group">
         <div class="lp-footer-subtitle">Alamat</div>
-        <div>JL. Raya Taman Wisma Asri Kav.7</div>
+        <div class="lp-footer-desc">JL. Raya Taman Wisma Asri Kav., Bekasi</div>
       </div>
     </div>
   </div>
 <script>
-  if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  alert('Akses hanya untuk PC/laptop.');
-  window.location.href = "index.html";
-}
   function showLoadingPopup(text = "Loading...") {
     document.getElementById('loadingText').innerText = text;
     document.getElementById('loadingPopup').style.display = 'flex';
