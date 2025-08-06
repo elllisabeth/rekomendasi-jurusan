@@ -73,7 +73,9 @@ body, .lp-container, .lp-header, .lp-role-card, .lp-additional-info, .lp-footer 
   color:white;
 }
 .lp-header img {
-  width: 64px; height: 64px; margin-bottom: 7px;
+  width: 64px; 
+  height: 64px; 
+  margin-bottom: 7px;
 }
 .lp-header h1 {
   font-size: 1rem;

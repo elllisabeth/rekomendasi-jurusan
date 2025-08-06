@@ -16,6 +16,7 @@
   <!---Link Font-->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="logo-sma-mutiara.png" /> 
 </head>
 <body>
   <div class="container">
@@ -42,7 +43,6 @@
         </a>
       </div>    
     </header>
-
 
     <!-- Guru Dashboard Content -->
   <section class="dashboard">
@@ -271,10 +271,6 @@
     // Baca header psikotes
     const headerPsikotes = dataPsikotes[0].map(h => h.toLowerCase().trim());
     const expectedPsikotes = ["nisn","nama","kecerdasan umum","spatial reasoning","mechanical reasoning","penalaran abstrak","pemahaman verbal","numerikal","logika"];
-
-    // DEBUG: tampilkan header yang terbaca untuk pengecekan manual
-    console.log('Header Psikotes:', headerPsikotes);
-    alert('Header Psikotes yang terbaca: ' + JSON.stringify(headerPsikotes));
 
     // Validasi: semua header expected harus ADA di sheet (tidak harus urut persis)
     const allMatch = expectedPsikotes.every(h => headerPsikotes.includes(h));

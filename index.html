@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,700&display=swap" rel="stylesheet">
   <!-- Khusus landing page -->
   <link rel="stylesheet" href="landing.css">
+  <link rel="icon" type="image/png" href="logo-sma-mutiara.png" />
 </head>
 <body>
   <div class="lp-background"></div>
@@ -119,43 +120,41 @@
   function hideLoadingPopup() {
     document.getElementById('loadingPopup').style.display = 'none';
   }
+  // Fungsi pilih role (Guru, Admin, Siswa/Orang Tua)
+  function selectRole(roleName) {
+    window.selectedRole = roleName; // Penting: simpan role yang dipilih
 
-// Fungsi pilih role (Guru, Admin, Siswa/Orang Tua)
-function selectRole(roleName) {
-  window.selectedRole = roleName; // Penting: simpan role yang dipilih
+    const formPopup = document.getElementById('lp-roleInputs');
+    formPopup.className = 'lp-form-popup-show';
 
-  const formPopup = document.getElementById('lp-roleInputs');
-  formPopup.className = 'lp-form-popup-show';
+    // --- Sembunyikan atau tampilkan elemen SignIn/SignUp ---
+    const signupGroup = document.querySelector('#signupOrLogin').parentElement;
+    if (roleName === 'Siswa / Orang Tua') {
+      // hanya SignIn, hide dropdown-nya
+      signupGroup.style.display = 'none';
+      document.getElementById('signupOrLogin').value = 'signIn';
+    } else {
+      // Guru/Admin: tunjukkan dropdown
+      signupGroup.style.display = 'block';
+      document.getElementById('signupOrLogin').value = 'signIn';
+    }
 
-  // Bersihkan input
-  if(document.getElementById('email')) document.getElementById('email').value = '';
-  if(document.getElementById('password')) document.getElementById('password').value = '';
-  if(document.getElementById('nisn')) document.getElementById('nisn').value = '';
+    // --- Bersihkan input ---
+    ['email','password','nisn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
 
-  document.getElementById('signupOrLogin').value = 'signIn';
-
-  // Tampilkan field sesuai role
-  const isGuruOrAdmin = (roleName === 'Guru' || roleName === 'Admin');
-  const passwordGroup = document.getElementById('passwordGroup');
-  const nisnGroup = document.getElementById('nisnGroup');
-  const passwordInput = document.getElementById('password');
-  const nisnInput = document.getElementById('nisn');
-
-  passwordGroup.style.display = isGuruOrAdmin ? 'block' : 'none';
-  nisnGroup.style.display = (roleName === 'Siswa / Orang Tua') ? 'block' : 'none';
-
-  if (isGuruOrAdmin) {
-    passwordInput.setAttribute('required', true);
-    nisnInput.removeAttribute('required');
-  } else {
-    passwordInput.removeAttribute('required');
-    nisnInput.setAttribute('required', true);
-  }
-
-  // Jika user ganti signIn/signUp, field diupdate
-  document.getElementById('signupOrLogin').onchange = function() {
+    // Tampilkan field sesuai role
+    const isGuruOrAdmin = (roleName === 'Guru' || roleName === 'Admin');
+    const passwordGroup = document.getElementById('passwordGroup');
+    const nisnGroup     = document.getElementById('nisnGroup');
     passwordGroup.style.display = isGuruOrAdmin ? 'block' : 'none';
-    nisnGroup.style.display = (roleName === 'Siswa / Orang Tua') ? 'block' : 'none';
+    nisnGroup    .style.display = (roleName === 'Siswa / Orang Tua') ? 'block' : 'none';
+
+    // Atur atribut required
+    const passwordInput = document.getElementById('password');
+    const nisnInput     = document.getElementById('nisn');
     if (isGuruOrAdmin) {
       passwordInput.setAttribute('required', true);
       nisnInput.removeAttribute('required');
@@ -163,12 +162,28 @@ function selectRole(roleName) {
       passwordInput.removeAttribute('required');
       nisnInput.setAttribute('required', true);
     }
-  };
 
-  setTimeout(function() {
-    document.getElementById('lp-roleInputs').scrollIntoView({behavior: 'smooth', block: 'center'});
-  }, 200);
-}
+    // Jika user ganti SignIn/SignUp (hanya aktif untuk Guru/Admin)
+    document.getElementById('signupOrLogin').onchange = function() {
+      if (isGuruOrAdmin) {
+        passwordGroup.style.display = 'block';
+        nisnGroup   .style.display = 'none';
+        passwordInput.setAttribute('required', true);
+        nisnInput.removeAttribute('required');
+      } else {
+        // (tetap sama, tapi dropdown sudah disembunyikan)
+        passwordGroup.style.display = 'none';
+        nisnGroup   .style.display = 'block';
+        passwordInput.removeAttribute('required');
+        nisnInput.setAttribute('required', true);
+      }
+    };
+
+    // Scroll ke form
+    setTimeout(() => {
+      formPopup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  }
 
   function submitForm() {
     const email = document.getElementById('email').value;
@@ -228,7 +243,6 @@ function selectRole(roleName) {
       });
     }
   }
-
 </script>
 </body>
 </html>
